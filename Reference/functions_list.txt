@@ -1,0 +1,23 @@
+
+------------ operational functions ------------
+  0 - return void
+
+  1 - terminate program
+
+------------ setter functions ------------
+  0 - move position based on current position (o:xxxxyyyy)
+    use single float
+
+  1 - move forward or backward (o:xxxx)
+    use single float
+    positive for forward and vice versa
+
+  2 - turn n degrees (o:yyyy)
+    use single float
+
+------------ getter functions ------------
+  0 - req position to parent (i:xxxxyyyy)
+    use single float
+
+  1 - req rotation to parent (i:yyyy)
+    always return single float

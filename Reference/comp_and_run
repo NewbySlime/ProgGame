@@ -1,0 +1,10 @@
+When coding:
+  if the player wants to code, they use start() and loop() like arduino
+
+When compiling:
+  The files that will be used for the programmable objs, will be compiled as usual, then linked with the shared library (if the dll can't be found, it will be recompiled)
+  The shared library will be kept in between the files of the game
+
+When running:
+  for starters, the program ask for some input for the template of the code
+  (and possibly some object properties to complete the program)

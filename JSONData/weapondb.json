@@ -1,0 +1,15 @@
+{
+  "Small Handgun" : {
+    "id": 0,
+    "ammoid": 0,
+    "dmg": 10,
+    "maxammo": 8,
+    "firerate": 1,
+    "firemode": 2,
+    "bullettype": 0,
+    "burstbulletcount": 0,
+    "bulletuse": 1,
+    "offsetpos": 40,
+    "Description": "Simple civilian gun good for self-defence situations."
+  }
+}

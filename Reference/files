@@ -1,0 +1,30 @@
+The codes that player's make will be placed in player's document, near the player's Savefiles
+DLLs that the game provide will be put in temporary file, at the start of the game
+
+Savefiles will be put in player's document, based on player's name
+
+file directory (old)
+
++-user://
+   |
+   +-bin/
+   |  |
+   |  +-coredll.dll
+   |  |
+   |  +-main.o
+   |  |
+   |  +-userX_main1_date.exe
+   |
+   +-players/
+      |
+      +-userX/
+         |
+         +-srccode
+         |  |
+         |  +-main1.cpp
+         |  |
+         |  +-main1.cpp.date.dat
+         |
+         +-world.dat
+         |
+         +-user.dat

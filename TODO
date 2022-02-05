@@ -1,0 +1,138 @@
+[v] fix the binary to float c#
+[v] create called functions handler
+[v] test "send" functions
+[v] test the socket handler
+[v] code socket handler for c# end
+[v] do for loop to append some asynchronously returned objects in SocketHandle c#
+
+
+------------ due 21 ------------
+[v] code the FunctionHandler class c++
+[v] code the random class
+[v] code the FunctionHandler class c#
+
+------------ due 22 ------------
+[v] add a static param string holder class c#
+[x] try using ascii encoding to send data to child proc
+
+------------ due 23 ------------
+[v] c++ libraries might need to have 2 options to run, otherwise, it fails (so unnecessary stdout and stdin handler can be ommited)
+[v] programrunner needs an additional options, such as port and pid
+[-] test FunctionHandle class c++ c# (try req)
+
+------------ due 26 ------------ c#
+[v] code a player controller
+  [v] player able to walk
+  [v] player able to use stuff infront of them
+[v] create a useable object
+[v] finish lib_moveto and lib_reqpos
+
+------------ due 28 ------------
+[-] think of how pausing works in child process c++
+[v] fix some code in ProcessHandler for giving child proc the port
+
+------------ due 3 ------------
+[v] player controller should using mouse fully
+[v] create an autoload class for handling and sorting the programs and compilings c#
+[v] code a weapon controller
+[v] might need some weapon database
+
+------------ due 7 ------------
+[v] fix shootasync simultaneously shoot at the same time
+
+------------ due 8 ------------
+[v] create backpack class
+
+
+------------ done lists ------------
+[v] make a game ui
+
+------------ bug lists ------------
+[v] need to know if the program is running or not for ending process
+[v] stuck on thread_cv (seem to be stuck on the FunctionHandler::callFunction, conditional variable "cv" isn't notified)
+    - apparently this problem occured because of the send funcs waiting for parent to send another data
+    - this can be prevented by using input to child for telling it to open a socket
+    - the parent not sending any data
+    
+[v] "function id not found", maybe this happens because of FunctionHandler::callFunction uses wrong function id
+[v] System.Net.Sockets.SocketException (0x80004005): An established connection was aborted by the software in your host machine.
+  - occured when running the program multiple times
+  - also occured when running the program too quick (starting when another similar program still running)
+  - it doesn't occured when it runs on different instance of class (maybe it has to run after the program is done)
+  - i think it caused by same pid with different process, one of it takes some of the data in which another one will be stuck waiting for the data
+
+[v] an async read operation has already been started on the stream (tools.cs:309)
+  - happens when i tried to run the script again
+  - this can be avoided by just making new process
+  - but maybe making the program exit first is the important todo first
+  
+[ ] program won't work as expected when req functions are called
+  - this is a bit confusing, sometimes it works, sometime it doesn't
+  - the program also won't work when it run again with req function as the main reason it stuck
+  
+[ ] if the robot is stuck physically somewhere in the world, it will stuck on loop
+
+------------ testing / debugging lists ------------
+[v] test newly written code
+[v] test req pos
+[v] test textbox and button pressing
+[v] test the scriptloader
+[v] test the savefieloader
+[ ] test the new functions in scriptloader
+
+
+------------ todo lists ------------
+[v] start code again by trying to understand the codes
+[v] try revise the socket and function handler
+[v] stop the programs when the game closed, or the class is deleted
+[v] change how template code works
+[ ] create core bot mechanics
+  [v] move to
+  [-] move forward / backward
+  [-] turning
+  [ ] control motor
+  [ ] control steer
+  [v] req pos
+  [-] req angle
+
+
+[v] fix script loader autoload
+[v] make a placeholder textbox for the user to type the directory of a script
+[v] for now implement savefiles (just folders and stuff)
+[v] addUser function should initialize folders
+[v] run the script when the button is pressed
+[v] do initialize user srccode in scriptloader
+[v] give some function for botlib from the functions declared
+[v] change how exiting works for child process
+[v] add a prevention for re-running the program
+[v] add a date based prevention for re-compiling same script
+[v] modify all the script handling the programs to current file system
+[v] add a function to automatically delete a program once it doesn't used (except the latest)
+[ ] then make an ui for exploring through the files and picking the script
+[ ] giving async functionality to the compiling process, so it doesn't stuck
+[ ] the script loader have feature to compile many srccode for one program
+[ ] give functionality for scriptloader to distinguish each file by its extensions
+[ ] with the ability to distinguish each file, it can be used for multi language
+[ ] then use json files to give the language some data like compiler paths, arguments, and some options 
+[ ] adding feature warnings for interpreter as it will change the src code as the program runs
+[ ] input should be given from an autoload to cancel some of the input processing if player can still moves even if the current usage was for textbox
+    - or just use an autoload to keep track of the input constraint and the class handle it itself
+    
+[ ] create bot handler to handle many bots
+[ ] try making a ui for inventory
+[ ] try connect player backpack with player's gun
+[ ] create a dropable object
+[ ] try create visuals
+[ ] game have 'gameover' state
+
+
+------------ Possible todo list ------------
+[ ] create ai for the robot
+  [ ] create quadtree class
+  [ ] create a* class using quadtree
+
+[ ] in libraries, use coroutines instead of multithreads c++
+[ ] remove unnecessary sdout and stdin handler c++
+[ ] ProgramRunner might need its own destructor c#
+[ ] try pausable scripts
+

@@ -1,0 +1,68 @@
+The connection between a child program and the main program will use "send" or "req"'
+child process can't use iostream, because it need to use standard input for functionality
+
+example:
+~~magic number here~~~~some bytes here~~~~and 1 byte for the terminator~~
+
+and after the "send" and "req" there's a function id, if a function is run asynchronously, the child process or parent will know what and where does a function called and 2 bytes for process id, since it runs on socket
+
+the difference for each magic numbers is for differentiating each functions
+
+The constant for magic numbers:
+send = 0x0b534e44 | 190,008,900
+req = 0x0b524551 | 189,941,073
+operational = 0x0b6f7072 | 191,852,658
+lineTerm = 0x0d
+
+
+-----------------------
+For startups, the IOSocket read 4 chars for knowing the id of a program and the port will be used
+
+
+-----------------------
+After a socket has been accepted, the program have to send some bytes to give some information
+
+size: 2 bytes
+
+pp
+
+pp is a 2 bytes of Process ID
+
+
+-----------------------
+The calling can be used like normal functions and accessing variables
+
+example:
+ppppxxiiyyyy....
+
+pppp is a 4 bytes of magic number
+
+xx is a 2 bytes for indicating which function will be used
+
+ii is a 2 bytes for indicating functionID
+
+
+yyyy.... are the parameters, no matter how many bytes will it be passed, since it's restricted to specific length by the main program
+it isn't seperated by specific byte, the difference between one parameter and the other is considered by how many bytes the param type has
+
+
+-----------------------
+After the calling, there's must be a "req" calling if the function returns one
+it's just a "req" followed by bytes of the returned type
+
+example:
+ppppiiyyyy
+
+yyyy is the returned variable
+
+ii is a 2 bytes for indicating functionID
+
+
+-----------------------
+FuncID is used to for differentiating which function it called before (good counter-measure for multi threaded process child)
+
+While FuncCode is used to determine which function the child wants to call
+
+
+-----------------------
+input to child program is used to let child know there's ...
