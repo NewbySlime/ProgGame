@@ -13,6 +13,7 @@
 #define lineTerminatorLen (int)'\n'
 #define funcInfoCode 8
 
+#include <chrono>
 
 #include <map>
 #include <iostream>

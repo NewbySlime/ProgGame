@@ -265,6 +265,7 @@ namespace Tools{
     }
 
     public int doRun(){
+      GD.PrintErr("test11");
       if(pathprogram != ""){
         try{
           createProcess(pathprogram, arguments);
@@ -386,16 +387,9 @@ namespace Tools{
         functionHandler.AddCallbackFunc(functions[i]);
     }
 
-    public void setProgramPath(string progPath, string additionalArguments = ""){
-      progrun.changePathprog(progPath, defaultArgument + additionalArguments);
-    }
-
-    public string compileCode(string srccode){
-      currentProgdat = new ScriptLoader.programdata{
-        srcname = srccode
-      };
-
-      return sloader.CompileProgram(ScriptLoader.compilerpath.cpp_compiler, ref currentProgdat);
+    public void setProgramData(ScriptLoader.programdata pd, string additionalArguments = ""){
+      currentProgdat = pd;
+      progrun.changePathprog(sloader.GetAboslutePathToProg(pd), defaultArgument + " " + additionalArguments);
     }
 
     public void runProgram(){
@@ -504,8 +498,9 @@ namespace Tools{
         currentListener.Bind(endPoint);
         currentListener.Listen(MaxSocketToListen);
         while(keepListening){
+          //GD.PrintErr("Waiting a socket...");
           Socket handle = (await currentListener.AcceptAsync());
-          GD.PrintErr("Accepting a socket...");
+          //GD.PrintErr("Accepting a socket...");
           byte[] DataFromSocket = new byte[0];
           int bytesLenRecv = 1;
           while(true){
@@ -572,8 +567,10 @@ namespace Tools{
               else{
                 ProcIDCallback[ProcessID](currentrf, ref returnedrf);
                 
-                if(returnedrf.isReadyToUse)
+                if(returnedrf.isReadyToUse){
+                  GD.PrintErr("ready to send");
                   ProcessedData.Add(returnedrf);
+                }
               }
             }
 

@@ -4,12 +4,13 @@ using System.Threading.Tasks;
 using gametools;
 
 
-public class Weapon: PlayerAction{
+// the base class has the option to customized custom stats
+// but since the base class has to do the job for damaging the obj,
+// the derived class has to call base class functions in order to damage something
+public class Weapon: ActionObject{
   [Signal]
-  private delegate void onUpdateSignal();
+  protected delegate void onUpdateSignal();
 
-  [Export]
-  private float rayLength = 2000;
   private float[] weaponRotationChangeSprite = {
     Mathf.Sin(Mathf.Deg2Rad(30)),
     Mathf.Sin(Mathf.Deg2Rad(60)),
@@ -22,180 +23,49 @@ public class Weapon: PlayerAction{
     "gun_h"
   };
 
-  private weapondata thisdata;
-  private int AmmoCount;
-  private Vector2 currentAimDir = new Vector2();
-  private RayCast2D rayCast = new RayCast2D();
-  private Timer fireratetimer = new Timer();
-  private AnimatedSprite gunsprite; // = new AnimatedSprite();
-  private bool dofireloop = false;
+  protected static string spritefr_path = "res://resources/spritefr";
+  protected static string spritefr_templatename = "weapon_{0}.tres";
+  protected Vector2 currentAimDir = Vector2.Up;
+  protected AnimatedSprite gunsprite = new AnimatedSprite();
 
-  private Task shoottask = null;
-  private Task throwableTask;
+  protected Timer fireratetimer = new Timer();
+  protected weapondata thisdata = new weapondata();
 
-  public delegate Backpack getBackpackDl();
-  public getBackpackDl getBackpack;
-  
-  
-  private void onAction1Pressed(){
-    switch(thisdata.type){
-      case weapondata.weapontype.normal:{
-        dofireloop = true;
-        if(shoottask == null)
-          shoottask = shootAsync();
+  protected int AmmoCount;
 
-        break;
-      }
-      
-      case weapondata.weapontype.throwable:{
-        //cooks the throwable
-        onAction2Pressed();
-        break;
-      }
-    }
-  }
-  
-  private void onAction1Released(){
-    switch(thisdata.type){
-      case weapondata.weapontype.normal:{
-        if(shoottask != null)
-          shoottask = null;
+  public override void _Ready(){
+    fireratetimer.ProcessMode = Timer.TimerProcessMode.Physics;
+    fireratetimer.OneShot = true;
+    AddChild(fireratetimer);
 
-        dofireloop = false;
-        break;
-      }
-      
-      case weapondata.weapontype.throwable:{
-        //throw the throwable
-        onAction2Released();
-        break;
-      }  
-    }    
-  }
-  
-  private void onAction2Pressed(){
-    switch(thisdata.type){
-      case weapondata.weapontype.normal:{
-        break;
-      }
+    SpriteFrames sf = GD.Load<SpriteFrames>(SavefileLoader.todir(new string[]{
+      spritefr_path,
+      string.Format(spritefr_templatename, ((int)thisdata.type).ToString())
+    }));
 
-      case weapondata.weapontype.throwable:{
-        f_doLoopThrow = true;
-        if(throwableTask == null)
-          throwableTask = ads_throwable();
-        break;
-      }
-    }
-  }
-  
-  private void onAction2Released(){
-    switch(thisdata.type){
-      case weapondata.weapontype.normal:{
-        break;
-      }
+    gunsprite.Frames = sf;
+    AddChild(gunsprite);
 
-      case weapondata.weapontype.throwable:{
-        f_doLoopThrow = false;
-        if(throwableTask != null)
-          throwableTask = null;
-
-        break;
-      }
-    }
+    gunsprite.Scale = new Vector2(3,3);
+    gunsprite.FlipH = true;
+    gunsprite.Centered = true;
+    gunsprite.GlobalPosition = currentAimDir * thisdata.offsetpos;
   }
 
-  private async Task ads_normal(){
-
+  public override void _Process(float delta){
+    EmitSignal("onUpdateSignal");
+    //Update();
   }
 
-  private bool f_doLoopThrow;
-  private async Task ads_throwable(){
-    while(f_doLoopThrow){
-      //update the visual
-
-      await ToSignal(this, "onUpdateSignal");
-    }
+  public virtual void SetWeaponData(weapondata data){
+    thisdata = data;
   }
 
-  //change this
-  private void shoottype(){
-    rayCast.GlobalPosition = GlobalPosition;
-    rayCast.CastTo = (currentAimDir*rayLength)+GlobalPosition;
-    if(rayCast.IsColliding()){
-      object collidebody = rayCast.GetCollider();
-            
-      //then do some damage
-      if(collidebody is DamageableObj)
-        ((DamageableObj)collidebody).doDamage(thisdata.damage);
-    }
-  }
-
-
-  //since many threads use this, try a prevention
-  private async Task shootAsync(){
-    int shootfreq = 0;
-    fireratetimer.WaitTime = thisdata.firerate;
-    switch(thisdata.firemode){
-      case weaponfiremode.single:
-        shootfreq = 1;
-        break;
-
-      case weaponfiremode.burst:
-        shootfreq = thisdata.burstfreq;
-        fireratetimer.WaitTime = thisdata.burstfirerate;
-        break;
-      
-      case weaponfiremode.auto:
-        shootfreq = -1;
-        break;
-    }
-
-    for(uint i = 0; dofireloop && (shootfreq < 0 || i < shootfreq); i++){
-      if((AmmoCount - thisdata.ammousage) >= 0){
-        if(fireratetimer.TimeLeft > 0)
-          await ToSignal(fireratetimer, "timeout");
-
-        if(!dofireloop)
-          break;
-
-        shoottype();
-        AmmoCount -= thisdata.ammousage;
-        fireratetimer.Start();
-      }
-      else{
-        //a massage saying ammo is insufficient
-        OnthisEvent(new warnData{
-          type = ActionType.gun,
-          warncode = (int)WarnType_gun.need_reload
-        });
-
-        dofireloop = false;
-      }
-    }
-
-    shoottask = null;
-  }
-
-  private void reload(){
-    AmmoCount = thisdata.maxammo;
-    //need backpack to get access to ammo
-
-    Backpack playerbp = getBackpack();
-    int manyammo = playerbp.CutItems(thisdata.itemid, itemdata.datatype.ammo, thisdata.maxammo-AmmoCount);
-
-    if(manyammo > 0)
-      AmmoCount += manyammo;
-    else
-      OnthisEvent(new warnData{
-        type = ActionType.gun,
-        warncode = (int)WarnType_gun.ammo_insufficient
-      });
-  }
-
-  private void Aim(Vector2 globalpoint){
+  public void Aim(Vector2 globalpoint){
     currentAimDir = (globalpoint - GlobalPosition).Normalized();
     float rotation = Mathf.Atan2(currentAimDir.y, currentAimDir.x);
-    gunsprite.GlobalPosition = GlobalPosition + (currentAimDir * thisdata.offsetpos);
+    float lengthFromParent = (gunsprite.GlobalPosition-GlobalPosition).Length();
+    gunsprite.GlobalPosition = GlobalPosition + (currentAimDir * lengthFromParent);
     gunsprite.GlobalRotation = rotation;
 
     //changes according to rotation
@@ -218,61 +88,212 @@ public class Weapon: PlayerAction{
         break;
       }
   }
+}
 
+
+public class NormalWeapon: Weapon{
+  private Task shoottask = null;
+
+  private Timer recoil_cooldowntimer = new Timer();
+  private Timer recoil_recoverytimer = new Timer();
+  private Timer reload_timer = new Timer();
+
+  private weapondata.extended_normalgundata extdata = new weapondata.extended_normalgundata();
+
+  private RayCast2D rayCast = new RayCast2D();
+  private bool doUpdateRecoil = false;
+  private bool dofireloop = false;
+  private bool isADSing = false;
+  private float currentRecoil;
+  // edit this
+  private float rayLength = 2000;
+
+  
+  public float CurrentRecoilDegrees{
+    get{
+      return currentRecoil * (isADSing? extdata.aimdownsight_reduce: 1);
+    }
+  }
+
+  public bool AimDownSight{
+    get{
+      return isADSing;
+    }
+
+    set{
+      isADSing = value;
+    }
+  }
+
+
+  private void _OnAction1(bool isAction){
+    if(isAction){
+      Shoot();
+    }
+    else{
+      StopShoot();
+    }
+  }
+
+  private void _OnAction2(bool isAction){
+    isADSing = isAction;
+  }
+
+  private void _ShootOnce(){
+    rayCast.GlobalPosition = GlobalPosition;
+    float recoilangle = Mathf.Deg2Rad(CurrentRecoilDegrees);
+    float angle = (GD.Randf() * recoilangle) + (currentAimDir.Angle() - recoilangle);
+    Vector2 newAimDir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+    rayCast.CastTo = (newAimDir*rayLength)+rayCast.Position;
+    if(rayCast.IsColliding()){
+      object collidebody = rayCast.GetCollider();
+            
+      //then do some damage
+      if(collidebody is DamageableObj)
+        ((DamageableObj)collidebody).DoDamageToObj(new DamageableObj.DamageData{damage = thisdata.damage});
+    }
+  }
+  
+  //since many threads use this, try a prevention
+  private async Task shootAsync(){
+    int shootfreq = 0;
+    fireratetimer.WaitTime = thisdata.firerate;
+    switch(extdata.firemode){
+      case weaponfiremode.single:
+        shootfreq = 1;
+        break;
+
+      case weaponfiremode.burst:
+        shootfreq = extdata.burstfreq;
+        fireratetimer.WaitTime = thisdata.firerate;
+        break;
+      
+      case weaponfiremode.auto:
+        shootfreq = -1;
+        break;
+    }
+
+    for(uint i = 0; dofireloop && (shootfreq < 0 || i < shootfreq); i++){
+      if((AmmoCount - extdata.ammousage) >= 0){
+        if(fireratetimer.TimeLeft > 0)
+          await ToSignal(fireratetimer, "timeout");
+
+        if(!dofireloop)
+          break;
+
+        _ShootOnce();
+        AddRecoil();
+        AmmoCount -= extdata.ammousage;
+        fireratetimer.Start();
+      }
+      else{
+        //a massage saying ammo is insufficient
+        OnthisEvent(new warnData{
+          type = ActionType.gun,
+          warncode = (int)WarnType_gun.need_reload
+        });
+
+        dofireloop = false;
+      }
+    }
+
+    shoottask = null;
+  }
+
+  // this runs the reloading animation and changing the ammocount when it finished reloading
+  private async void _Reload(int ammocount){
+    reload_timer.Start(extdata.reload_time);
+    await ToSignal(reload_timer, "timeout");
+    AmmoCount = ammocount;
+  }
+
+  private void AddRecoil(){
+    currentRecoil += extdata.recoil_step;
+    if(currentRecoil > extdata.recoil_max)
+      currentRecoil = extdata.recoil_max;
+    
+    doUpdateRecoil = false;
+    recoil_cooldowntimer.Start(extdata.recoil_cooldown);
+  }
+
+  private void _OnCooldownTimeout(){
+    recoil_recoverytimer.ProcessMode = Timer.TimerProcessMode.Physics;
+    recoil_recoverytimer.Start(extdata.recoil_recovery * ((currentRecoil - extdata.recoil_min)/(extdata.recoil_max - extdata.recoil_min)));
+    doUpdateRecoil = true;
+
+#pragma warning disable
+    UpdateRecoilAsync();
+  }
+
+  private async void UpdateRecoilAsync(){
+    while(doUpdateRecoil && recoil_recoverytimer.TimeLeft != 0){
+      float deltaDegrees = extdata.recoil_max - extdata.recoil_min;
+      currentRecoil = (recoil_recoverytimer.TimeLeft / extdata.recoil_recovery) * deltaDegrees + extdata.recoil_min;
+      await ToSignal(this, "onUpdateSignal");
+    }
+  }
 
   public override void _Ready(){
-    fireratetimer.OneShot = true;
+    base._Ready();
+
+    _Action1 = _OnAction1;
+    _Action2 = _OnAction2;
+
+    recoil_cooldowntimer.OneShot = true;
+    recoil_cooldowntimer.Connect("timeout", this, "_OnCooldownTimeout");
+    AddChild(recoil_cooldowntimer);
+
+    recoil_recoverytimer.OneShot = true;
+    AddChild(recoil_recoverytimer);
+
     rayCast.CollideWithBodies = true;
     rayCast.Enabled = true;
     rayCast.AddException(GetParent());
-    AddChild(fireratetimer);
     AddChild(rayCast);
-
-    gunsprite = GetNode<AnimatedSprite>("AnimatedSprite");
   }
 
-  public override void _Process(float delta){
-    EmitSignal("onUpdateSignal");
-    //Update();
-  }
+  // all values that need to be initialized with godot's nodes
+  // will be initialized in the _Ready()
+  // the ammocount should be initialized by the player
+  public override void SetWeaponData(weapondata data){
+    if(data.type == weapondata.weapontype.normal){
+      base.SetWeaponData(data);
+      extdata = (weapondata.extended_normalgundata)data.extendedData;
+      currentRecoil = extdata.recoil_min;
 
-  public override void _Draw(){
-    /*rayCast.GlobalPosition = GlobalPosition;
-    rayCast.CastTo = (currentAimDir*rayLength)+GlobalPosition;
-
-    DrawLine(Position, currentAimDir*rayLength, (rayCast.IsColliding())? Colors.Green: Colors.Red);*/
-  }
-
-  public override void onInput(InputEvent input){
-    if(input is InputEventMouseMotion iem)
-      Aim(GetGlobalMousePosition());
-    
-    else if(input is InputEventMouseButton){
-      if(input.IsActionPressed("action1"))
-        onAction1Pressed();
-      else if(input.IsActionReleased("action1"))
-        onAction1Released();
-        
-      if(input.IsActionPressed("action2"))
-        onAction2Pressed();
-      else if(input.IsActionReleased("action2"))
-        onAction2Released();
-
-      if(input.IsActionPressed("reload"))
-        reload();
+      // temporary
+      AmmoCount = extdata.maxammo;
+    }
+    else{
+      GD.PrintErr("Data of weapon type is false with the current weapon class,");
+      GD.PrintErr("Data of weapon type: ", data.type.ToString(), "  What type should've been: ", weapondata.weapontype.normal.ToString());
     }
   }
 
-  public void changeWeapon(int weaponID){
-    WeaponAutoload currentWAuto = GetNode<WeaponAutoload>("/root/WeaponAutoload");
-    weapondata? currentdata = currentWAuto.getWeaponDataOrNull(weaponID);
-    if(currentdata != null){
-      thisdata = (weapondata)currentdata;
-      AmmoCount = thisdata.maxammo;
-    }
+  // can exceed like how many ammo based on player backpack
+  // and return how many ammo are used when reloading
+  public int Reload(int ammocount){
+    int ammoused = ammocount > extdata.maxammo? extdata.maxammo: ammocount;
 
-    Aim(currentAimDir+GlobalPosition);
-    
-    //and some changes to visual
+#pragma warning disable
+    _Reload(ammoused);
+    return ammoused;
   }
+
+  public void Shoot(){
+    dofireloop = true;
+    if(shoottask == null)
+      shoottask = shootAsync();
+  }
+
+  public void StopShoot(){
+    if(shoottask != null)
+      shoottask = null;
+    
+    dofireloop = false;
+  }
+}
+
+public class Throwables: Weapon{
+
 }

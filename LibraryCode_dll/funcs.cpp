@@ -37,12 +37,14 @@ class FunctionHandler{
 
 
     void _AtDataGet(objData obj){
+      //cerr << "_AtDataGet called" << endl;
       {lock_guard<mutex> lg1(WaitingList_m), lg2(returnedObj_m);
         returnedObj[obj.functionID] = obj;
         auto iter = WaitingList.find(obj.functionID);
         if(iter != WaitingList.end())
           iter->second->notify_all();
       }
+      //cerr << "_AtDataGet Done" << endl;
     }
 
     map<unsigned short, string> *_GetStringParamTemplate(int templateCode){
@@ -70,6 +72,7 @@ class FunctionHandler{
     }
 
     void static AtDataGet(objData obj, void* thisClass){
+      //cerr << "AtDataGet called" << endl;
       ((FunctionHandler*)thisClass)->_AtDataGet(obj);
     }
 
@@ -113,6 +116,8 @@ class FunctionHandler{
     }
 
     objData callFunction(objData currentObjData){
+      //cerr << "callFunction called" << endl;
+      //this_thread::sleep_for(chrono::seconds(1));
       mutex m;
       unique_lock<mutex> ul(m);
       condition_variable cv;
@@ -121,6 +126,7 @@ class FunctionHandler{
         WaitingList[currentObjData.functionID] = &cv;
       }
 
+      //cerr << "waiting for the function" << endl;
       io->queueData(currentObjData);
       cv.wait(ul);
 
@@ -168,8 +174,11 @@ vec2<float> currentPosition(){
   objData obj;
   obj.templateCode = reqMagicNum;
   obj.functionCode = FUNCS_REQPOS;
+  //cerr << "awaiting for a data..." << endl;
   objData newobj = currentfh->callFunction(obj);
+  //cerr << "data is done used" << endl;
   vec2<float> currentPos(getParam<float>(newobj.params, 0), getParam<float>(newobj.params, 4));
+  //cerr << "done calculating" << endl;
   return currentPos;
 }
 

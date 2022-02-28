@@ -14,41 +14,58 @@ public class Player: DamageableObj{
   [Export]
   private float playerUseArea = 10;
   [Export]
-  private float cameraOffset = 0.5f;
+  private float cameraOffset = 0.2f;
+  [Export]
+  private float cameraOffset_ADS = 0.5f;
   
-
   private Weapon currentWeapon;
   private Vector2 dir = Vector2.Zero;
   private AnimatedSprite playerAnim;
   private UseableAutoload useableAutoload;
+  private Autoload gameAutoload;
+  private WeaponAutoload weapAutoload;
   private Backpack playerBackpack = new Backpack(10);
   private Camera2D playerCamera;
   private Position2D cameraPos;
   private gui_Player playerGui;
   private bool isPlayerSprinting = false;
-  
-  
+
   
   public override void _Ready(){
     base._Ready();
     //temporary code
-    playerGui = GetParent().GetNode<gui_Player>("CanvasLayer/PlayerGUI");
+    //playerGui = GetParent().GetNode<gui_Player>("CanvasLayer/PlayerGUI");
+
+    gameAutoload = GetNode<Autoload>("/root/Autoload");
+    weapAutoload = GetNode<WeaponAutoload>("/root/WeaponAutoload");
 
     //usechecker = GetNode<Area2D>("checker");
     useableAutoload = GetNode<UseableAutoload>("/root/UseableAutoload");
-
-    currentWeapon = GetNode<Weapon>("Weapon");
-    currentWeapon.OnthisEvent = OnActionWarn;
 
     playerCamera = GetNode<Camera2D>("CameraPos/Camera2D");
     cameraPos = GetNode<Position2D>("CameraPos");
 
     playerAnim = GetNode<AnimatedSprite>("PlayerSprite");
-    currentWeapon.changeWeapon(0); //temporary
+    // temporary
+    currentWeapon = weapAutoload.GetNewWeapon(0);
+    currentWeapon.OnthisEvent = OnActionWarn;
+    AddChild(currentWeapon);
   }
 
-  public override void _PhysicsProcess(float delta){
-    
+  public override void _Process(float delta){
+    NormalWeapon nw = (NormalWeapon)currentWeapon;
+
+    // update crosshair
+    Pointer currentPointer = gameAutoload.GetGamePointer();
+    float currentRecoilAngle = nw.CurrentRecoilDegrees;
+    float mouseLengthToPlayer = (GetGlobalMousePosition() - GlobalPosition).Length();
+    float diameterLength =
+      Mathf.Sin(Mathf.Deg2Rad(currentRecoilAngle)) *
+      mouseLengthToPlayer /
+      Mathf.Sin(Mathf.Deg2Rad((180-currentRecoilAngle)/2));
+
+    currentPointer.SetDiameter(diameterLength);
+    cameraPos.GlobalPosition = ((GetGlobalMousePosition()-GlobalPosition)* (nw.AimDownSight? cameraOffset_ADS: cameraOffset))+GlobalPosition;
   }
 
   protected override void onHealthChanged(){
@@ -108,16 +125,28 @@ public class Player: DamageableObj{
       if(@event.IsActionPressed("use_object"))
         UseObject();
     }
-    else if(@event is InputEventMouseMotion)
-      cameraPos.GlobalPosition = ((GetGlobalMousePosition()-GlobalPosition)*cameraOffset)+GlobalPosition;
+    else if(@event is InputEventMouseButton){
+      if(@event.IsActionPressed("action1")){
+        currentWeapon.Action1(true);
+      }
+      else if(@event.IsActionReleased("action1")){
+        currentWeapon.Action1(false);
+      }
 
-    //if player can use any action, this might need revision
-    if(currentWeapon != null)
-      currentWeapon.onInput(@event);
+      if(@event.IsActionPressed("action2")){
+        currentWeapon.Action2(true);
+      }
+      else if(@event.IsActionReleased("action2")){
+        currentWeapon.Action2(false);
+      }
+    }
+    else if(@event is InputEventMouseMotion){
+      currentWeapon.Aim(GetGlobalMousePosition());
+    }
   }
 
 
-  public void OnActionWarn(PlayerAction.warnData warn){
+  public void OnActionWarn(ActionObject.warnData warn){
     
   }
 
@@ -129,7 +158,7 @@ public class Player: DamageableObj{
   }
 }
 
-public class PlayerAction: Node2D{
+public class ActionObject: Node2D{
   public enum WarnType_gun{
     need_reload,
     ammo_insufficient,
@@ -145,10 +174,23 @@ public class PlayerAction: Node2D{
     public int warncode;
   }
 
+
+  protected _ActionDelegate _Action1, _Action2;
+
   public delegate void _OnEvent(warnData data);
+  // isAction is like input pressed and released
+  public delegate void _ActionDelegate(bool isAction);
   public _OnEvent OnthisEvent;
 
-  public virtual void onInput(InputEvent dir){
+  public _ActionDelegate Action1{
+    get{
+      return _Action1;
+    }
+  }
 
+  public _ActionDelegate Action2{
+    get{
+      return _Action2;
+    }
   }
 }

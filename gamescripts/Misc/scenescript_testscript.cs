@@ -73,13 +73,29 @@ public class scenescript_testscript : Node2D{
       isMouseOnTop = false;
    }
 
+   public void on_compiled(ScriptLoader.programdata pd){
+      try{
+         GD.PrintErr("test");
+         bot2.setProgramData(pd);
+         bot2.runProgram();
+      }
+      catch(Exception e){
+         GD.PrintErr(e.ToString());
+      }
+   }
+
    public void on_buttonPressed(){
+      sloader.PickAndCompileScript(on_compiled);
+      //sloader.test1();
+      
+      /*
       bot1.setProgramPath(bot1.compileCode(textbox.Text.Remove(0, startTextLength)));
       bot1.runProgram();
+      */
    }
 
    public void on_buttonPressed2(){
-      bot2.setProgramPath(bot2.compileCode(textbox.Text.Remove(0, startTextLength)));
-      bot2.runProgram();
+      //bot2.setProgramPath(bot2.compileCode(textbox.Text.Remove(0, startTextLength)));
+      //bot2.runProgram();
    }
 }

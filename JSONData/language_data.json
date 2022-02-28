@@ -1,0 +1,8 @@
+{
+  "c++":{
+    "compiler_names": "g++",
+    "options": "-o {0}",
+    "compatible_extensions": "cpp|hpp|c|h",
+    "dependencies": "coredll.dll|main.o"
+  }
+}

@@ -44,7 +44,9 @@
           unique_lock<mutex> ul(m);
           isWaitingForData = true;
           //thread_cv.wait_for(ul, chrono::microseconds(100));
+          //cerr << "waiting a data to send..." << endl;
           thread_cv.wait(ul);
+          //cerr << "done waiting for a data" << endl;
           continue;
         }
 
@@ -53,7 +55,8 @@
         SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
         if(connect(s, (sockaddr*)&localHostAddr, sizeof(localHostAddr)) < 0){
           delete[] currobjs;
-          throw string("Socket fails to connect");
+          cerr << "Socket fails to connect" << endl;
+          throw;
         }
         
         string ProcIDstr = getParam(procID);
@@ -62,6 +65,8 @@
         for(size_t i = 0; i < objQueuesize; i++){
           objData *od = &currobjs[i];
           string paramtoSend;
+
+          //cerr << "func_id = " << od->functionID << endl;
 
           paramtoSend += getParam(od->templateCode)
             + getParam(od->functionCode)
@@ -108,6 +113,7 @@
           //getting the code and id
           currentData.functionCode = getParam<unsigned short>(recvchars, i);
           currentData.functionID = getParam<unsigned short>(recvchars, i+2);
+          //cerr << "func id from parent: " << currentData.functionID << endl;
           i += 4;
 
           string paramLen = (*cbToGetParamLen)(currentData.templateCode, currentData.functionCode, ptrToClassCallback);
@@ -115,9 +121,11 @@
             for(int pLen_iter = 0; i < recvchars.length() && pLen_iter < paramLen[p_iter]; pLen_iter++)
               currentData.params += recvchars[i++];
 
-          cerr << currentData.functionCode << endl;
-          if(currentData.templateCode == oprMagicNum)
+          //cerr << currentData.functionCode << endl;
+          if(currentData.templateCode == oprMagicNum){
+            //cerr << "operational template code used" << endl;
             operationalReturn(currentData);
+          }
 
           (*callbackFunction)(currentData, ptrToClassCallback);
 
@@ -189,6 +197,7 @@
 
     if(isWaitingForData){
       thread_cv.notify_all();
+      //cerr << "notified" << endl;
       isWaitingForData = false;
     }
   }

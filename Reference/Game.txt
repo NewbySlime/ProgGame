@@ -1,0 +1,5 @@
+====================== game ======================
+
+  This is a programming game where the Player, an Astronaut, trying to establish a base in an inhabitable planet. This is similar to games like Colobot and Factorio. The Player sets off to a dangerous planet to make it habitable. By bringing some pre-built robots, parts, and some minerals, the Player is expected to survive and make a living based on it.
+  
+  The Player can do anything on that planet like mining, exploring, and do stuff to that planet as their hearts content. Whilst the Player can do anything, the same goes to the Robots (with the perfect parts of course)! But... the Robots aren't working as expected, since the programmers on Earth don't know what to expect on the harsh planet. And because of that, the Player has to do the programming stuff to meet with their satisfaction. 

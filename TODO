@@ -65,12 +65,12 @@
   - happens when i tried to run the script again
   - this can be avoided by just making new process
   - but maybe making the program exit first is the important todo first
-  
-[ ] program won't work as expected when req functions are called
-  - this is a bit confusing, sometimes it works, sometime it doesn't
-  - the program also won't work when it run again with req function as the main reason it stuck
-  
+
+[v] cannot compile the programs because the linker cannot open the outputpath (?)
+[ ] program won't work as expected when req functions are called (this one is literally randomly worked, just skip this)
+
 [ ] if the robot is stuck physically somewhere in the world, it will stuck on loop
+
 
 ------------ testing / debugging lists ------------
 [v] test newly written code
@@ -78,7 +78,9 @@
 [v] test textbox and button pressing
 [v] test the scriptloader
 [v] test the savefieloader
-[ ] test the new functions in scriptloader
+[v] test the new functions in scriptloader
+[v] test the new compiling mechanism
+[ ] test "auto-remove programs" function in scriptloader
 
 
 ------------ todo lists ------------
@@ -95,7 +97,6 @@
   [v] req pos
   [-] req angle
 
-
 [v] fix script loader autoload
 [v] make a placeholder textbox for the user to type the directory of a script
 [v] for now implement savefiles (just folders and stuff)
@@ -108,31 +109,71 @@
 [v] add a date based prevention for re-compiling same script
 [v] modify all the script handling the programs to current file system
 [v] add a function to automatically delete a program once it doesn't used (except the latest)
-[ ] then make an ui for exploring through the files and picking the script
-[ ] giving async functionality to the compiling process, so it doesn't stuck
-[ ] the script loader have feature to compile many srccode for one program
-[ ] give functionality for scriptloader to distinguish each file by its extensions
-[ ] with the ability to distinguish each file, it can be used for multi language
-[ ] then use json files to give the language some data like compiler paths, arguments, and some options 
-[ ] adding feature warnings for interpreter as it will change the src code as the program runs
-[ ] input should be given from an autoload to cancel some of the input processing if player can still moves even if the current usage was for textbox
+[v] giving extension filter the function
+[v] changing how the GetFilesByExplorer function works
+[v] then make an ui for exploring through the files and picking the script
+[v] make a data for compilers paths and the enum for it
+[v] in the ready function in scriptloader give a check if the command to a compiler is available or not
+[v] add a prompt for the user to pick the language type they want
+[v] add a cancel thing for the prompt and prevent the node from being stuck
+[v] finish some codes in some functions marked with warning signs
+[v] Change how compiling works
+[v] giving async functionality to the compiling process, so it doesn't stuck
+[v] the script loader have feature to compile many srccode for one program
+[v] with the ability to distinguish each file, it can be used for multi language
+[v] then use json files to give the language some data like compiler paths, arguments, and some options
+[v] input should be given from an autoload to cancel some of the input processing if player can still moves even if the current usage was for textbox
     - or just use an autoload to keep track of the input constraint and the class handle it itself
     
-[ ] create bot handler to handle many bots
-[ ] try making a ui for inventory
-[ ] try connect player backpack with player's gun
-[ ] create a dropable object
-[ ] try create visuals
-[ ] game have 'gameover' state
+[v] make a cleaning function to remove all programs in the bin folder
+[v] need the dependencies for the languages
+[v] random firing accuracy
+[v] decreasing accuracy after firing for a longer time
+[v] fixing camera positioning when aiming
+[v] ads-ing
+[v] change the data structure of weapondata
+[v] weapon class should initialized by code, not scene
+[ ] make an explosive stuff
+[ ] make a damage type that reduce health using time
+[ ] make a main menu and menu for the game
 
 
 ------------ Possible todo list ------------
+[ ] re-work on the socket in the cpp end (the socket will be opened when the a function is called, or in short terms, synchronously)
+[ ] adding an error log to the game from the user programs
+[ ] might need an in-game log for the user to use
 [ ] create ai for the robot
   [ ] create quadtree class
   [ ] create a* class using quadtree
 
 [ ] in libraries, use coroutines instead of multithreads c++
-[ ] remove unnecessary sdout and stdin handler c++
+[ ] remove unnecessary stdout and stdin handler c++
 [ ] ProgramRunner might need its own destructor c#
 [ ] try pausable scripts
 
+
+------------ Possible features ------------
+[ ] tile based blocks
+[ ] mineable items
+[ ] Conveyor belts
+[ ] Crafting
+[ ] Craftable stations
+[ ] energy based robots
+[ ] in-game currency for selling the minerals
+[ ] procedural generation maps
+[ ] weather systems
+[ ] signals between robots
+[ ] pipes and wires
+[ ] Electricity
+[ ] Water
+[ ] Lakes, and Seas (if the planet have one, if not it will be just ice)
+[ ] Farming
+[ ] Exotic plants
+[ ] Robot parts for some specific features
+[ ] Caves
+[ ] Enemies
+[ ] Friendlies
+[ ] PETS
+[ ] house for shelter
+[ ] and some craftable furniture/tools for the players to use
+[ ] Lores

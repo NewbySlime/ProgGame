@@ -15,6 +15,10 @@ file directory (old)
    |  |
    |  +-userX_main1_date.exe
    |
+   +-dependency/
+   |  |
+   |  +-any_file.cpp
+   |
    +-players/
       |
       +-userX/
