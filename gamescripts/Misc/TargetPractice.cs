@@ -1,9 +1,6 @@
 using Godot;
 
 public class TargetPractice: DamageableObj{
-  [Export]
-  protected int maxhealth = 100;
-
   private Sprite targetSprite;
 
   private string target_idle = "idle";
@@ -11,24 +8,14 @@ public class TargetPractice: DamageableObj{
 
   private int new_maxhealth = 100;
 
-  protected override void doDamage(float dmg){
-    GD.PrintErr(currenthealth);
-    base.doDamage(dmg);
-  }
-
-  protected override void onHealthDepleted(){
-    targetSprite.Visible = false;
-    //targetSprite.Animation = target_broken;
-
-    EmitSignal("_OnHealthDepleted");
-  }
-
-  protected override void onHealthChanged(){
-    GD.PrintErr(currenthealth);
+  private void OnHealthChanged(float currhealth){
+    GD.Print(currhealth, "/", maxhealth);
   }
 
   public override void _Ready(){
     base._Ready();
+
+    Connect("_OnHealthChanged", this, "OnHealthChanged");
 
     targetSprite = GetNode<Sprite>("Sprite");
     changeMaxHealth(new_maxhealth);

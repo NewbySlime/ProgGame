@@ -4,9 +4,10 @@ using System.Collections.Generic;
 
 //weapondata is used to save all information about the weapon
 //while currentweapondata is used to save the current state of a gun in backpack
-public struct weapondata{
+public class weapondata{
   public struct extended_normalgundata{ 
     public int maxammo;
+    public float firerate;
     // recoil max and min is based on angle the gun will shoot
     // recoil_step is the recoil added per bullet
     // recoil_cooldown is the time needed to fully recover from recoil
@@ -16,13 +17,33 @@ public struct weapondata{
     public float aimdownsight_reduce;
     public int ammousage, burstfreq;
     public weaponshoottype bulletType;
+    public int scatterbulletcount;
     public weaponfiremode firemode;
   }
 
   public struct extended_throwabledata{
+    public enum throwable_type{
+      // like nades and stuff
+      explosives,
+      // molotovs, potions...
+      hazardous_nades,
+      // like knives or tomahawk
+      projectiles
+    }
+
     //the aoemax to aoemin is relatively the same across explodeables, it will use exponential function to do so
     //time limit is used to determine how long throwable can endure until it explodes or activates
-    public float aoemax, aoemin, range, timelimit;
+    public throwable_type throwableType;
+    public float aoemax, aoemin, range;
+    public float cookTime;
+  }
+
+  public struct extended_projectiledata{
+    
+  }
+
+  public struct extended_meleedata{
+    public float attackradius;
   }
 
   public enum weapontype{
@@ -36,21 +57,35 @@ public struct weapondata{
   public int id, itemid;
   //if burstfirerate is -1, burstfirerate will be the same as firerate
   //firerate in seconds per bullet
-  public float damage, firerate;
   public float offsetpos;
   public weapontype type;
+  public damagedata dmgdata;
   public object extendedData;
 }
 
+public struct damagedata{
+  public enum damagetype{
+    normal,
+    toxic,
+    burn,
+    eletrocute
+  }
+
+  public float damage;
+  public float step;
+  public float lasttime;
+  public float elementalDmg;
+  public bool doNormalDamage;
+  public damagetype dmgtype;
+}
+
 public enum weaponshoottype{
-  single = 0,
-  scatter,
-  projectile,
-  throwable
+  single,
+  scatter
 }
 
 public enum weaponfiremode{
-  single = 0,
+  single,
   burst,
   auto
 }
@@ -62,7 +97,7 @@ public class WeaponAutoload: Node2D{
 
   public override void _Ready(){
     File f = new File();
-    f.Open("res://JSONData//weapondb.json", File.ModeFlags.Read);
+    f.Open("res://JSONData//weapon_data.json", File.ModeFlags.Read);
     string jsonstore = f.GetAsText();
 
     JSONParseResult parsedobj = JSON.Parse(jsonstore);
@@ -81,18 +116,73 @@ public class WeaponAutoload: Node2D{
 
             weapondata wd = new weapondata{
               id = weaponid,
-              damage = (float)subdict["dmg"],
-              firerate = (float)subdict["firerate"],
               offsetpos = (int)(float)subdict["offsetpos"],
-              type = (weapondata.weapontype)(int)(float)subdict["weapontype"]
+              type = (weapondata.weapontype)(int)(float)subdict["weapontype"],
             };
 
+            damagedata.damagetype currdt = (damagedata.damagetype)(int)(float)subdict["dmgtype"];
+            bool doND = false;
+            if(subdict.Contains("do_normal_damage"))
+              doND = (float)subdict["do_normal_damage"] > 0;            
+
+            switch(currdt){
+              case damagedata.damagetype.normal:{
+                wd.dmgdata = new damagedata{
+                  dmgtype = currdt,
+                  damage = (float)subdict["dmg"]
+                };
+                
+                break;
+              }
+              
+              case damagedata.damagetype.toxic:{
+                wd.dmgdata = new damagedata{
+                  dmgtype = currdt,
+                  elementalDmg = (float)subdict["elementalDmg"],
+                  lasttime = (float)subdict["lasttime"],
+                  step = (float)subdict["step"],
+                  damage = doND? (float)subdict["dmg"]: 0,
+                  doNormalDamage = doND
+                };
+
+                break;
+              }
+
+              case damagedata.damagetype.burn:{
+                wd.dmgdata = new damagedata{
+                  dmgtype = currdt,
+                  elementalDmg = (float)subdict["elementalDmg"],
+                  lasttime = (float)subdict["lasttime"],
+                  step = (float)subdict["step"],
+                  damage = doND? (float)subdict["dmg"]: 0,
+                  doNormalDamage = doND
+                };
+
+                break;
+              }
+
+              case damagedata.damagetype.eletrocute:{
+                wd.dmgdata = new damagedata{
+                  dmgtype = currdt,
+                  elementalDmg = (float)subdict["elementalDmg"],
+                  damage = doND? (float)subdict["dmg"]: 0,
+                  doNormalDamage = doND
+                };
+
+                break;
+              }
+            }
+
+            GD.Print(gunname, " ", wd.type.ToString());
+
             switch(wd.type){
-              case weapondata.weapontype.normal:
+              case weapondata.weapontype.normal:{
+                weaponshoottype bullettype = (weaponshoottype)(int)(float)subdict["bullettype"];
                 wd.extendedData = new weapondata.extended_normalgundata{
+                  firerate = (float)subdict["firerate"],                  
                   maxammo = (int)(float)subdict["maxammo"],
                   firemode = (weaponfiremode)(int)(float)subdict["firemode"],
-                  bulletType = (weaponshoottype)(int)(float)subdict["bullettype"],
+                  bulletType = bullettype,
                   burstfreq = (int)(float)subdict["burstbulletcount"],
                   ammousage = (int)(float)subdict["bulletuse"],
                   reload_time = (float)subdict["reload_time"],
@@ -104,8 +194,37 @@ public class WeaponAutoload: Node2D{
                   recoil_recovery = (float)subdict["recoil_recovery"],
                   recoil_step = (float)subdict["recoil_step"],
 
-                  aimdownsight_reduce = (float)subdict["aimdownsight_reduce"]
+                  aimdownsight_reduce = (float)subdict["aimdownsight_reduce"],
+
+                  // not that needed stuff
+                  scatterbulletcount = (bullettype == weaponshoottype.scatter)?(int)(float)subdict["scatterbulletcount"]: 1
                 };
+
+                break;
+              }
+
+              case weapondata.weapontype.projectile_normal:
+                wd.extendedData = new weapondata.extended_meleedata{
+
+                };
+
+                break;
+
+              case weapondata.weapontype.throwable:
+                wd.extendedData = new weapondata.extended_throwabledata{
+                  throwableType = (weapondata.extended_throwabledata.throwable_type)(int)(float)subdict["throwable_type"],
+                  aoemax = (float)subdict["aoemax"],
+                  aoemin = (float)subdict["aoemin"],
+                  range = (float)subdict["range"],
+                  cookTime = (float)subdict["cook_time"]
+                };
+
+                break;
+
+              case weapondata.weapontype.melee:
+                  wd.extendedData = new weapondata.extended_meleedata{
+                    attackradius = (float)subdict["attack_radius"]
+                  };
 
                 break;
             }
@@ -118,7 +237,7 @@ public class WeaponAutoload: Node2D{
         }
         catch(System.Exception e){
           GD.PrintErr("Cannot retrieve a value for gun '", gunname, "'.");
-          GD.PrintErr("Error message:\n", e.Message);
+          GD.PrintErr("Error message:\n", e.Message, "\nStackTrace:\n", e.StackTrace);
           GD.PrintErr("\nThis weapon will not be used for the game because of lack values");
         }
       }
@@ -133,11 +252,29 @@ public class WeaponAutoload: Node2D{
     weapondata currentwd = weapDict[weaponid];
     Weapon weap = null;
     switch(currentwd.type){
-      case weapondata.weapontype.normal:
-        NormalWeapon tmp = new NormalWeapon();
-        tmp.SetWeaponData(currentwd);
-        weap = tmp;
+      case weapondata.weapontype.normal:{
+        weap = new NormalWeapon();
+        weap.SetWeaponData(currentwd);
         break;
+      }
+      
+      case weapondata.weapontype.throwable:{
+        weap = new Throwables();
+        weap.SetWeaponData(currentwd);
+        break;
+      }
+
+      case weapondata.weapontype.projectile_normal:{
+        weap = new ProjectileWeapon();
+        weap.SetWeaponData(currentwd);
+        break;
+      }
+
+      case weapondata.weapontype.melee:{
+        weap = new MeleeWeapon();
+        weap.SetWeaponData(currentwd);
+        break;
+      }
     }
 
     return weap;

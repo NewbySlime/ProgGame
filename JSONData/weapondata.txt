@@ -1,0 +1,4 @@
+universal weapon data:
+  "id" is for differentiating each weapon
+  "ammoid" is for differentiating what ammo it will be used
+  "weapontype" is a type for each type of gun

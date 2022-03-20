@@ -3,6 +3,7 @@ using Godot;
 public class Pointer: Position2D{
   public struct CrosshairOption{
     public bool up_line, right_line, down_line, left_line, dot;
+    public float crosshairSize;
   }
 
   public struct PointerOption{
@@ -40,11 +41,12 @@ public class Pointer: Position2D{
   private void UseCrosshairOption(CrosshairOption opt){
     bool[] bool_array = new bool[]{opt.up_line, opt.right_line, opt.down_line, opt.right_line};
     for(int i = 0; i < bool_array.Length; i++){
-      GD.Print(bool_array[i]);
       LineSprites[i].Visible = bool_array[i];
+      LineSprites[i].Scale = Vector2.One * opt.crosshairSize;
     }
 
     DotSprite.Visible = opt.dot;
+    DotSprite.Scale = Vector2.One * opt.crosshairSize;
   }
 
   private void UsePointerOption(PointerOption opt){
@@ -85,6 +87,7 @@ public class Pointer: Position2D{
 
     DotSprite = new Sprite();
     AddChild(DotSprite);
+    DotSprite.ZIndex = 1;
 
     PointerSprite = new Sprite();
     AddChild(PointerSprite);

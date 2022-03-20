@@ -67,6 +67,7 @@
   - but maybe making the program exit first is the important todo first
 
 [v] cannot compile the programs because the linker cannot open the outputpath (?)
+[ ] change all the timer process mode in player.cs and weapon.cs
 [ ] program won't work as expected when req functions are called (this one is literally randomly worked, just skip this)
 
 [ ] if the robot is stuck physically somewhere in the world, it will stuck on loop
@@ -80,7 +81,10 @@
 [v] test the savefieloader
 [v] test the new functions in scriptloader
 [v] test the new compiling mechanism
-[ ] test "auto-remove programs" function in scriptloader
+[v] test "auto-remove programs" function in scriptloader
+[v] test the explosive class
+[v] test melee stuff
+[v] test hazardArea
 
 
 ------------ todo lists ------------
@@ -133,13 +137,30 @@
 [v] ads-ing
 [v] change the data structure of weapondata
 [v] weapon class should initialized by code, not scene
-[ ] make an explosive stuff
-[ ] make a damage type that reduce health using time
+[v] make an explosive stuff
+[v] add damage types and use it for DamageableObj
+[v] change the player class to npc since the robots and enemies use the same function as the player
+[v] give the gun some smoke trails
+[ ] use backpack for the player
+[ ] then make a temporary ui for the backpack
+[ ] add some firing effects
+[ ] finish weapon shoot type
+[ ] focus on the gui
+[ ] change how measurement are used, instead of pixel, just use meters
 [ ] make a main menu and menu for the game
+
+
+------------ backpack functionality todo list ------------
+[ ] have a functionality to add certain stuffs with certain count
+[ ] weapons will get some ammo from the backpack
+[ ] granades should be in ammo type
+[ ] backpack have limit on how heavy it can carry (and restricted to player ability)
+[ ] player will use backpack
 
 
 ------------ Possible todo list ------------
 [ ] re-work on the socket in the cpp end (the socket will be opened when the a function is called, or in short terms, synchronously)
+[ ] work on a pausable program (and a saveable program state)
 [ ] adding an error log to the game from the user programs
 [ ] might need an in-game log for the user to use
 [ ] create ai for the robot
@@ -177,3 +198,9 @@
 [ ] house for shelter
 [ ] and some craftable furniture/tools for the players to use
 [ ] Lores
+
+
+------------ Optimization lists ------------
+[ ] lasting damage timer should be every second, and the timer is universal and handled by an autoload
+[ ] some timer should be updated every physics process so it doesn't get intervened when the game lags
+[ ] DoTrigger func in Explosives class might not right

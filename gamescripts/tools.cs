@@ -126,7 +126,7 @@ namespace Tools{
         </summary>
 
         <returns>
-        int of index in the dictionary
+        Int of index in the dictionary. Returns -1 if not found.
         </returns>
       */
       public int findkey(int key){
@@ -145,6 +145,9 @@ namespace Tools{
             break;
           }
         }
+
+        if(left <= right)
+          return -1;
 
         return res;
       }
@@ -265,7 +268,6 @@ namespace Tools{
     }
 
     public int doRun(){
-      GD.PrintErr("test11");
       if(pathprogram != ""){
         try{
           createProcess(pathprogram, arguments);
@@ -522,6 +524,7 @@ namespace Tools{
             
           for(int data_iter = 2; data_iter < (DataFromSocket.Length-9); data_iter++){
             returnFunc
+              // intentionally empty
               currentrf = new returnFunc{
 
               },
@@ -762,15 +765,24 @@ namespace gametools{
 
 
   public class Backpack{
+    public struct get_itemdatastruct{
+      public itemdata.datatype type;
+      public int itemid;
+    }
+
     //storage index contains ints based on itemdatas
+    //basically index to itemdatas
     private int[] indexbp;
     //sorted storage based on id
     private List<itemdata> itemdatas = new List<itemdata>();
     //index of unoccupied in indexbp
+    //this is used when the backpack needs to know the first void storage
+    //only available if a gap exists in between 0 and bp_i
     private CustomDict<int> unoccupiedIndex = new CustomDict<int>();
     //referencing itemdatas
     private bool isNewItemsSorted = false;
     private int backpacksize, bp_i = 0;
+
 
     private void _quicksort(int lowest, int highest){
       if(lowest >= 0 && highest >= 0 && lowest < highest){
@@ -942,10 +954,6 @@ namespace gametools{
       return itemdatas[indexbp[index]].getmanyitems();
     }
 
-    public itemdata GetItemdata(int index){
-      return itemdatas[indexbp[index]];
-    }
-
     //this will also remove some items
     public int CutItems(int id, itemdata.datatype type, int many){
       int maxidx = getIndex(id, type);
@@ -978,6 +986,32 @@ namespace gametools{
       }
 
       return manyitemscutted;
+    }
+
+    //return based on sorted list
+    public get_itemdatastruct[] GetBackpackItemData(){
+      get_itemdatastruct[] res = new get_itemdatastruct[itemdatas.Count];
+      for(int i = 0; i < itemdatas.Count; i++){
+        itemdata currid = itemdatas[i];
+        res[i] = new get_itemdatastruct{
+          type = currid.type,
+          itemid = currid.itemid
+        };
+      }
+
+      return res;
+    }
+
+    public get_itemdatastruct? GetItemData(int index){
+      if(index < 0 || index >= bp_i || unoccupiedIndex.findkey(index) >= 0)
+        return null;
+
+      itemdata currentItemdata = itemdatas[indexbp[index]];
+
+      return new get_itemdatastruct{
+        type = currentItemdata.type,
+        itemid = currentItemdata.itemid
+      };
     }
   }
 }

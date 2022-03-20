@@ -2,7 +2,7 @@ using Godot;
 using Godot.Collections;
 using gametools;
 
-public class Player: DamageableObj{
+public class Player: NPC{
   [Export(PropertyHint.PlaceholderText)]
   private string useableClassName = "Useable";
   [Export]
@@ -18,65 +18,100 @@ public class Player: DamageableObj{
   [Export]
   private float cameraOffset_ADS = 0.5f;
   
-  private Weapon currentWeapon;
   private Vector2 dir = Vector2.Zero;
-  private AnimatedSprite playerAnim;
-  private UseableAutoload useableAutoload;
-  private Autoload gameAutoload;
-  private WeaponAutoload weapAutoload;
+  private BackpackUI backpackGui;
   private Backpack playerBackpack = new Backpack(10);
   private Camera2D playerCamera;
   private Position2D cameraPos;
   private gui_Player playerGui;
   private bool isPlayerSprinting = false;
 
+
+  private void _OpenBackpack(){
+    backpackGui.UpdateBackpackInformation(playerBackpack.GetBackpackItemData());
+    backpackGui.Popup_();
+  }
+
+  private void ReloadWeapon(){
+    int ammocount = playerBackpack.CutItems(currentWeapon.AmmoID, itemdata.datatype.ammo, currentWeapon.MaxAmmo);
+
+    if(ammocount <= 0)
+      GD.PrintErr("Ammo insufficient.");
+    else
+      GD.Print("Current ammo in backpack: ", playerBackpack.HowManyItems(currentWeapon.AmmoID, itemdata.datatype.ammo));
+    
+    currentWeapon.Reload(ammocount);
+  }
+
   
   public override void _Ready(){
     base._Ready();
-    //temporary code
-    //playerGui = GetParent().GetNode<gui_Player>("CanvasLayer/PlayerGUI");
-
-    gameAutoload = GetNode<Autoload>("/root/Autoload");
-    weapAutoload = GetNode<WeaponAutoload>("/root/WeaponAutoload");
-
-    //usechecker = GetNode<Area2D>("checker");
-    useableAutoload = GetNode<UseableAutoload>("/root/UseableAutoload");
 
     playerCamera = GetNode<Camera2D>("CameraPos/Camera2D");
     cameraPos = GetNode<Position2D>("CameraPos");
+    backpackGui = gameAutoload.GetCurrentBackpackUI();
 
-    playerAnim = GetNode<AnimatedSprite>("PlayerSprite");
     // temporary
     currentWeapon = weapAutoload.GetNewWeapon(0);
-    currentWeapon.OnthisEvent = OnActionWarn;
     AddChild(currentWeapon);
+
+    playerBackpack.AddItem(new itemdata{
+      type = itemdata.datatype.weapon,
+      itemid = 0
+    });
+
+    playerBackpack.AddItem(new itemdata{
+      type = itemdata.datatype.weapon,
+      itemid = 1
+    });
+
+    playerBackpack.AddItem(new itemdata{
+      type = itemdata.datatype.ammo,
+      itemid = 0,
+      
+    })
   }
 
   public override void _Process(float delta){
-    NormalWeapon nw = (NormalWeapon)currentWeapon;
+    switch(currentWeapon.Weapondata.type){
+      case weapondata.weapontype.normal:{
+        NormalWeapon nw = (NormalWeapon)currentWeapon;
 
-    // update crosshair
-    Pointer currentPointer = gameAutoload.GetGamePointer();
-    float currentRecoilAngle = nw.CurrentRecoilDegrees;
-    float mouseLengthToPlayer = (GetGlobalMousePosition() - GlobalPosition).Length();
-    float diameterLength =
-      Mathf.Sin(Mathf.Deg2Rad(currentRecoilAngle)) *
-      mouseLengthToPlayer /
-      Mathf.Sin(Mathf.Deg2Rad((180-currentRecoilAngle)/2));
+        // update crosshair
+        Pointer currentPointer = gameAutoload.GetGamePointer();
+        float currentRecoilAngle = nw.CurrentRecoilDegrees;
+        float mouseLengthToPlayer = (GetGlobalMousePosition() - GlobalPosition).Length();
+        float diameterLength =
+          Mathf.Sin(Mathf.Deg2Rad(currentRecoilAngle)) *
+          mouseLengthToPlayer /
+          Mathf.Sin(Mathf.Deg2Rad((180-currentRecoilAngle)/2));
 
-    currentPointer.SetDiameter(diameterLength);
-    cameraPos.GlobalPosition = ((GetGlobalMousePosition()-GlobalPosition)* (nw.AimDownSight? cameraOffset_ADS: cameraOffset))+GlobalPosition;
+        currentPointer.SetDiameter(diameterLength);
+        cameraPos.GlobalPosition = ((GetGlobalMousePosition()-GlobalPosition)* (nw.AimDownSight? cameraOffset_ADS: cameraOffset))+GlobalPosition;
+        break;
+      }
+
+      default:{
+        cameraPos.GlobalPosition = ((GetGlobalMousePosition()-GlobalPosition)* cameraOffset)+GlobalPosition;
+        break;
+      }
+    }
   }
 
+  /*
   protected override void onHealthChanged(){
     playerGui.Change_Health(currenthealth/maxHealth);
   }
+  */
 
 
   //bug, if move buttons pressed at the same times, when some are released, the last released will not be accounted
   private byte moveleft_b = 0, moveright_b = 0, moveup_b = 0, movedown_b = 0;
   public override void _Input(InputEvent @event){
     if(@event is InputEventKey){
+      if(@event.IsActionPressed("open_backpack"))
+        _OpenBackpack();
+
       if(@event.IsActionPressed("move_up"))
         moveup_b = 1;
       else if(@event.IsActionReleased("move_up"))
@@ -106,21 +141,23 @@ public class Player: DamageableObj{
         (moveright_b * 1) + (moveleft_b  * -1),
         (moveup_b * -1) + (movedown_b * 1)
       );
-      
-      Physics2DDirectBodyState bodyState = Physics2DServer.BodyGetDirectState(GetRid());
-      bodyState.LinearVelocity = dir * (isPlayerSprinting? playerSpeed_run: playerSpeed_walk);
-      _IntegrateForces(bodyState);
+    
+      Move(dir * (isPlayerSprinting? playerSpeed_run: playerSpeed_walk));
 
-      playerAnim.Playing = (dir != Vector2.Zero);
-      if(playerAnim.Playing){
-        playerAnim.Animation = "walk_anim";
+      entityAnim.Playing = (dir != Vector2.Zero);
+      if(entityAnim.Playing){
+        entityAnim.Animation = "walk_anim";
         if(dir.x > 0)
-          playerAnim.FlipH = false;
+          entityAnim.FlipH = false;
         else if(dir.x < 0)
-          playerAnim.FlipH = true;
+          entityAnim.FlipH = true;
       }
       else
-        playerAnim.Animation = "idle";  
+        entityAnim.Animation = "idle";
+
+      
+      if(@event.IsActionPressed("reload"))
+        ReloadWeapon();
 
       if(@event.IsActionPressed("use_object"))
         UseObject();
@@ -141,13 +178,8 @@ public class Player: DamageableObj{
       }
     }
     else if(@event is InputEventMouseMotion){
-      currentWeapon.Aim(GetGlobalMousePosition());
+      currentWeapon.AimTo(GetGlobalMousePosition());
     }
-  }
-
-
-  public void OnActionWarn(ActionObject.warnData warn){
-    
   }
 
   public void UseObject(){
@@ -165,32 +197,33 @@ public class ActionObject: Node2D{
     doADS
   }
 
+  public enum WarnType_throwables{
+    prepare_throwing,
+    throwing
+  }
+
   public enum ActionType{
-    gun
+    gun,
+    throwable
   }
 
   public struct warnData{
     public ActionType type;
-    public int warncode;
+    public object warntype;
   }
-
-
-  protected _ActionDelegate _Action1, _Action2;
 
   public delegate void _OnEvent(warnData data);
-  // isAction is like input pressed and released
-  public delegate void _ActionDelegate(bool isAction);
   public _OnEvent OnthisEvent;
 
-  public _ActionDelegate Action1{
-    get{
-      return _Action1;
-    }
+  public virtual void CallInputEvent(InputEvent @event){
+    
   }
 
-  public _ActionDelegate Action2{
-    get{
-      return _Action2;
-    }
+  public virtual void Action1(bool action){
+
+  }
+
+  public virtual void Action2(bool action){
+
   }
 }

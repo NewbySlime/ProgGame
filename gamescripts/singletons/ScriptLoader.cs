@@ -116,7 +116,6 @@ public class ScriptLoader: Node2D{
       //if(!directory.FileExists(outputpath)){
       if(returnCode != 0){
         // this is asychronously called by purpose
-  #pragma warning disable
         autoload_node.PromptUserWithAcceptDialog("ErrorMessage", output);
         return null;
       }

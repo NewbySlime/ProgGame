@@ -19,12 +19,19 @@ public static class OS_Data{
 
 
 public class Autoload: Node2D{
+
+  [Export]
+  private float CrossHairSize = 2f;
+
   //this uses the database from the static class of paramsdatabase
   private SocketListenerHandler listener = new SocketListenerHandler(ParamData.RegularBotParams.GetStringParam);
   private CanvasLayer ci;
   private Task currentListeningTask;
   private InputFlag currentInputFlags = new InputFlag();
   private Pointer GamePointer;
+
+  //game ui stuff
+  private BackpackUI currbui;
 
   //Game engine Stuffs
   private static string Infogui_Player_name = "PlayerInfoGUI";
@@ -51,8 +58,10 @@ public class Autoload: Node2D{
   }
 
   [Export]
-  private PackedScene gui_Player_Scene, Infogui_Player_Scene, gui_FileExplorer_Scene, gui_OptionsPopup_Scene, gui_ScrollAcceptDialog_Scene;
+  private PackedScene gui_Player_Scene, Infogui_Player_Scene, gui_FileExplorer_Scene, gui_OptionsPopup_Scene, gui_ScrollAcceptDialog_Scene, gui_PlayerBackpack_scene;
 
+  [Export]
+  private PackedScene ps_smokeTrail;
 
   // all the game stuffs
   private Pointer.CrosshairOption GameCrosshairOption = new Pointer.CrosshairOption{
@@ -110,8 +119,10 @@ public class Autoload: Node2D{
     GamePointer = new Pointer();
     ci.AddChild(GamePointer);
 
+    GameCrosshairOption.crosshairSize = CrossHairSize;
+
     GamePointer.LineSpriteImage = gui_CrosshairLine_Img;
-    GamePointer.DotSpriteImage = gui_CrosshairLine_Img;
+    GamePointer.DotSpriteImage = gui_CrosshairDot_Img;
     GamePointer.CurrentPointerOption = GamePointerOption;
     GamePointer.CurrentCrosshairOption = GameCrosshairOption;
     //GamePointer.SetPointerContext(Pointer.PointerContext.RegularPointer);
@@ -122,6 +133,8 @@ public class Autoload: Node2D{
     gui_p.Name = gui_Player_name;
 
     //add backpack class
+    currbui = gui_PlayerBackpack_scene.Instance<BackpackUI>();
+    ci.AddChild(currbui);
   }
 
   public override void _Process(float delta){
@@ -212,6 +225,14 @@ public class Autoload: Node2D{
 
   public Pointer GetGamePointer(){
     return GamePointer;
+  }
+
+  public PackedScene GetSmokeTrailScene(){
+    return ps_smokeTrail;
+  }
+
+  public BackpackUI GetCurrentBackpackUI(){
+    return currbui;
   }
 }
 
