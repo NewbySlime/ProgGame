@@ -742,28 +742,55 @@ namespace gametools{
 
 
     private int _manyitems = 0;
-    public datatype type;
-    public int itemid;
-    public int maxitemsinbp;
-    public int indexinbackpack;
-    public object additionaldata;
+    private int _maxitems;
+    private datatype _type;
+    private int _itemid;
 
-    public int reducemanyitems(int many){
-      int excess = (int)_manyitems+many;
-      if(excess >= maxitemsinbp)
-        return excess - maxitemsinbp;
-      else if(excess < 0)
-        return excess;
-      else
-        return 0;
+    public int MaxItems{
+      get{
+        return _maxitems;
+      }
     }
 
-    public int getmanyitems(){
-      return _manyitems;
+    public int ItemCount{
+      get{
+        return _manyitems;
+      }
+    }
+
+    public int ItemID{
+      get{
+        return _itemid;
+      }
+    }
+
+    public datatype Type{
+      get{
+        return _type;
+      }
+    }
+
+    // add or subtract the item count
+    // returns excess number
+    public int ChangeItemCount(int valueToAdd){
+      int excess = 0;
+      _manyitems += valueToAdd;
+      if(_manyitems > _maxitems){
+        excess = _manyitems - _maxitems;
+        _manyitems = _maxitems;
+      }
+      else if(_manyitems < 0){
+        excess = 0 - _manyitems;
+        _manyitems = 0;
+      }
+
+      return excess;
     }
   }
 
 
+  // should just use the list of it
+  // and returns the class based on the index
   public class Backpack{
     public struct get_itemdatastruct{
       public itemdata.datatype type;
@@ -1012,6 +1039,10 @@ namespace gametools{
         type = currentItemdata.type,
         itemid = currentItemdata.itemid
       };
+    }
+
+    public itemdata this[](int index){
+      return itemdatas[indexbp[index]];
     }
   }
 }

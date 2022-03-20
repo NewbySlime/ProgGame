@@ -4,14 +4,24 @@ using gametools;
 
 public class BackpackUI: PopupDialog{
   private VBoxContainer vbcont = new VBoxContainer();
+  private List<HBoxContainer> hbcontlists = new List<HBoxContainer>();
+  private List<Control> itemSlotImgLists = new List<Control>();
   private Button[] buttonLists;
+
+  private Texture emptySlotImg;
 
   public override void _Ready(){
     GetNode("ScrollContainer").AddChild(vbcont);
   }
 
-  public void SetBackpackSize(int backpackSize){
-    
+  public void SetBackpackSize(int backpackSize, int itemPerY){
+    int YSize = (int)Mathf.Floor(backpackSize/itemPerY);
+    for(int iy = 0; iy < YSize; iy++){
+      int currentItemCountY = iy*itemPerY;
+      for(int ix = 0; ix < itemPerY && currentItemCount+ix < backpackSize; ix++){
+        
+      }
+    }
   }
 
   public void UpdateBackpackInformation(Backpack.get_itemdatastruct[] datas){
