@@ -10,6 +10,7 @@ using System.Collections.Generic;
 
 */
 
+// a singleton for keeping track of every Useables
 public class UseableAutoload: Node2D{
   private CustomDict<Useable> Useables = new CustomDict<Useable>();
   public struct UseableData{

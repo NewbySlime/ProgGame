@@ -18,13 +18,13 @@ public class BackpackUI: PopupDialog{
     int YSize = (int)Mathf.Floor(backpackSize/itemPerY);
     for(int iy = 0; iy < YSize; iy++){
       int currentItemCountY = iy*itemPerY;
-      for(int ix = 0; ix < itemPerY && currentItemCount+ix < backpackSize; ix++){
+      for(int ix = 0; ix < itemPerY && currentItemCountY+ix < backpackSize; ix++){
         
       }
     }
   }
 
-  public void UpdateBackpackInformation(Backpack.get_itemdatastruct[] datas){
+  public void UpdateBackpackInformation(itemdata[] datas){
     buttonLists = new Button[datas.Length];
     for(int i = 0; i < datas.Length; i++){
       buttonLists[i] = new Button{

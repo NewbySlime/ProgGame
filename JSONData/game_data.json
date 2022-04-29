@@ -1,0 +1,8 @@
+{
+  "item_max":{
+    "ammo": 200,
+    "weapon": 1,
+    "consumables": 100,
+    "armor": 1
+  }
+}

@@ -90,162 +90,144 @@ public enum weaponfiremode{
   auto
 }
 
-public class WeaponAutoload: Node2D{
+public class WeaponAutoload: JSONdataloader{
   private Dictionary<int, weapondata> weapDict = new Dictionary<int, weapondata>();
-  private Dictionary<int, string> weapname = new Dictionary<int, string>();
-  private Dictionary<int, string> weapdesc = new Dictionary<int, string>();
+  private static WeaponAutoload _autoload;
 
-  public override void _Ready(){
-    File f = new File();
-    f.Open("res://JSONData//weapon_data.json", File.ModeFlags.Read);
-    string jsonstore = f.GetAsText();
+  private static void setAutoloadClass(WeaponAutoload au){
+    _autoload = au;
+  }
 
-    JSONParseResult parsedobj = JSON.Parse(jsonstore);
+  protected override void addItemData(godcol.Dictionary subdict, int weaponid){
+    try{
+      weapondata wd = new weapondata{
+        id = weaponid,
+        offsetpos = (int)(float)subdict["offsetpos"],
+        type = (weapondata.weapontype)(int)(float)subdict["weapontype"],
+      };
 
-    if(parsedobj.Result is godcol.Dictionary){
-      godcol.Dictionary dict = (godcol.Dictionary)parsedobj.Result;
+      damagedata.damagetype currdt = (damagedata.damagetype)(int)(float)subdict["dmgtype"];
+      bool doND = false;
+      if(subdict.Contains("do_normal_damage"))
+        doND = (float)subdict["do_normal_damage"] > 0;            
 
-      foreach(string gunname in dict.Keys){
-        try{
-          object _subdict = dict[gunname];
-          if(_subdict is godcol.Dictionary){
-            godcol.Dictionary subdict = (godcol.Dictionary)_subdict;
-            int weaponid = (int)(float)subdict["id"];
-            weapname[weaponid] = gunname;
-            weapdesc[weaponid] = (string)subdict["Description"];
-
-            weapondata wd = new weapondata{
-              id = weaponid,
-              offsetpos = (int)(float)subdict["offsetpos"],
-              type = (weapondata.weapontype)(int)(float)subdict["weapontype"],
-            };
-
-            damagedata.damagetype currdt = (damagedata.damagetype)(int)(float)subdict["dmgtype"];
-            bool doND = false;
-            if(subdict.Contains("do_normal_damage"))
-              doND = (float)subdict["do_normal_damage"] > 0;            
-
-            switch(currdt){
-              case damagedata.damagetype.normal:{
-                wd.dmgdata = new damagedata{
-                  dmgtype = currdt,
-                  damage = (float)subdict["dmg"]
-                };
-                
-                break;
-              }
-              
-              case damagedata.damagetype.toxic:{
-                wd.dmgdata = new damagedata{
-                  dmgtype = currdt,
-                  elementalDmg = (float)subdict["elementalDmg"],
-                  lasttime = (float)subdict["lasttime"],
-                  step = (float)subdict["step"],
-                  damage = doND? (float)subdict["dmg"]: 0,
-                  doNormalDamage = doND
-                };
-
-                break;
-              }
-
-              case damagedata.damagetype.burn:{
-                wd.dmgdata = new damagedata{
-                  dmgtype = currdt,
-                  elementalDmg = (float)subdict["elementalDmg"],
-                  lasttime = (float)subdict["lasttime"],
-                  step = (float)subdict["step"],
-                  damage = doND? (float)subdict["dmg"]: 0,
-                  doNormalDamage = doND
-                };
-
-                break;
-              }
-
-              case damagedata.damagetype.eletrocute:{
-                wd.dmgdata = new damagedata{
-                  dmgtype = currdt,
-                  elementalDmg = (float)subdict["elementalDmg"],
-                  damage = doND? (float)subdict["dmg"]: 0,
-                  doNormalDamage = doND
-                };
-
-                break;
-              }
-            }
-
-            GD.Print(gunname, " ", wd.type.ToString());
-
-            switch(wd.type){
-              case weapondata.weapontype.normal:{
-                weaponshoottype bullettype = (weaponshoottype)(int)(float)subdict["bullettype"];
-                wd.extendedData = new weapondata.extended_normalgundata{
-                  firerate = (float)subdict["firerate"],                  
-                  maxammo = (int)(float)subdict["maxammo"],
-                  firemode = (weaponfiremode)(int)(float)subdict["firemode"],
-                  bulletType = bullettype,
-                  burstfreq = (int)(float)subdict["burstbulletcount"],
-                  ammousage = (int)(float)subdict["bulletuse"],
-                  reload_time = (float)subdict["reload_time"],
-                  
-                  // recoil stuff
-                  recoil_cooldown = (float)subdict["recoil_cooldown"],
-                  recoil_max = (float)subdict["recoil_max"],
-                  recoil_min = (float)subdict["recoil_min"],
-                  recoil_recovery = (float)subdict["recoil_recovery"],
-                  recoil_step = (float)subdict["recoil_step"],
-
-                  aimdownsight_reduce = (float)subdict["aimdownsight_reduce"],
-
-                  // not that needed stuff
-                  scatterbulletcount = (bullettype == weaponshoottype.scatter)?(int)(float)subdict["scatterbulletcount"]: 1
-                };
-
-                break;
-              }
-
-              case weapondata.weapontype.projectile_normal:
-                wd.extendedData = new weapondata.extended_meleedata{
-
-                };
-
-                break;
-
-              case weapondata.weapontype.throwable:
-                wd.extendedData = new weapondata.extended_throwabledata{
-                  throwableType = (weapondata.extended_throwabledata.throwable_type)(int)(float)subdict["throwable_type"],
-                  aoemax = (float)subdict["aoemax"],
-                  aoemin = (float)subdict["aoemin"],
-                  range = (float)subdict["range"],
-                  cookTime = (float)subdict["cook_time"]
-                };
-
-                break;
-
-              case weapondata.weapontype.melee:
-                  wd.extendedData = new weapondata.extended_meleedata{
-                    attackradius = (float)subdict["attack_radius"]
-                  };
-
-                break;
-            }
-
-            weapDict.Add(
-              weaponid,
-              wd
-            );
-          }
+      switch(currdt){
+        case damagedata.damagetype.normal:{
+          wd.dmgdata = new damagedata{
+            dmgtype = currdt,
+            damage = (float)subdict["dmg"]
+          };
+          
+          break;
         }
-        catch(System.Exception e){
-          GD.PrintErr("Cannot retrieve a value for gun '", gunname, "'.");
-          GD.PrintErr("Error message:\n", e.Message, "\nStackTrace:\n", e.StackTrace);
-          GD.PrintErr("\nThis weapon will not be used for the game because of lack values");
+        
+        case damagedata.damagetype.toxic:{
+          wd.dmgdata = new damagedata{
+            dmgtype = currdt,
+            elementalDmg = (float)subdict["elementalDmg"],
+            lasttime = (float)subdict["lasttime"],
+            step = (float)subdict["step"],
+            damage = doND? (float)subdict["dmg"]: 0,
+            doNormalDamage = doND
+          };
+
+          break;
+        }
+
+        case damagedata.damagetype.burn:{
+          wd.dmgdata = new damagedata{
+            dmgtype = currdt,
+            elementalDmg = (float)subdict["elementalDmg"],
+            lasttime = (float)subdict["lasttime"],
+            step = (float)subdict["step"],
+            damage = doND? (float)subdict["dmg"]: 0,
+            doNormalDamage = doND
+          };
+
+          break;
+        }
+
+        case damagedata.damagetype.eletrocute:{
+          wd.dmgdata = new damagedata{
+            dmgtype = currdt,
+            elementalDmg = (float)subdict["elementalDmg"],
+            damage = doND? (float)subdict["dmg"]: 0,
+            doNormalDamage = doND
+          };
+
+          break;
         }
       }
+
+      switch(wd.type){
+        case weapondata.weapontype.normal:{
+          weaponshoottype bullettype = (weaponshoottype)(int)(float)subdict["bullettype"];
+          wd.extendedData = new weapondata.extended_normalgundata{
+            firerate = (float)subdict["firerate"],                  
+            maxammo = (int)(float)subdict["maxammo"],
+            firemode = (weaponfiremode)(int)(float)subdict["firemode"],
+            bulletType = bullettype,
+            burstfreq = (int)(float)subdict["burstbulletcount"],
+            ammousage = (int)(float)subdict["bulletuse"],
+            reload_time = (float)subdict["reload_time"],
+            
+            // recoil stuff
+            recoil_cooldown = (float)subdict["recoil_cooldown"],
+            recoil_max = (float)subdict["recoil_max"],
+            recoil_min = (float)subdict["recoil_min"],
+            recoil_recovery = (float)subdict["recoil_recovery"],
+            recoil_step = (float)subdict["recoil_step"],
+
+            aimdownsight_reduce = (float)subdict["aimdownsight_reduce"],
+
+            // not that needed stuff
+            scatterbulletcount = (bullettype == weaponshoottype.scatter)?(int)(float)subdict["scatterbulletcount"]: 1
+          };
+
+          break;
+        }
+
+        case weapondata.weapontype.projectile_normal:
+          wd.extendedData = new weapondata.extended_meleedata{
+
+          };
+
+          break;
+
+        case weapondata.weapontype.throwable:
+          wd.extendedData = new weapondata.extended_throwabledata{
+            throwableType = (weapondata.extended_throwabledata.throwable_type)(int)(float)subdict["throwable_type"],
+            aoemax = (float)subdict["aoemax"],
+            aoemin = (float)subdict["aoemin"],
+            range = (float)subdict["range"],
+            cookTime = (float)subdict["cook_time"]
+          };
+
+          break;
+
+        case weapondata.weapontype.melee:
+            wd.extendedData = new weapondata.extended_meleedata{
+              attackradius = (float)subdict["attack_radius"]
+            };
+
+          break;
+      }
+
+      weapDict.Add(
+        weaponid,
+        wd
+      );
     }
-    else{
-      GD.PrintErr("weapondb.json is not dictionary.");
+    catch(System.Exception e){
+      GD.PrintErr("Cannot retrieve a value for gun '", itemname[weaponid], "' of id (", weaponid, ").");
+      GD.PrintErr("Error message:\n", e.Message, "\nStackTrace:\n", e.StackTrace);
+      GD.PrintErr("\nThis weapon will not be used for the game because of lack values");
     }
-    //adding data to weapDict
+  }
+
+  public override void _Ready(){
+    jsondataPath = "res://JSONData//weapon_data.json";
+    base._Ready();
   }
 
   public Weapon GetNewWeapon(int weaponid){
@@ -278,5 +260,11 @@ public class WeaponAutoload: Node2D{
     }
 
     return weap;
+  }
+
+  public static WeaponAutoload Autoload{
+    get{
+      return _autoload;
+    }
   }
 }

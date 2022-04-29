@@ -714,138 +714,129 @@ namespace Tools{
 
 namespace gametools{
 
-  //id of [0,1,2,3,4] are reserved for [weapon, ammo, crafting_items, consumables, armor]
-  public class itemdata{
-    //currentweapondata is used to save the current state of a gun in backpack
-    //while weapondata is used to save all information about the weapon
-    public struct currentweapondata{
-      public int weaponid;
-      public int currentammo;
-    }
-
-    public struct consumablesdata{
-      
-    }
-
-    public struct currentarmordata{
-
-    }
-
-
-    public enum datatype{
-      weapon,
-      ammo,
-      crafting_items,
-      consumables,
-      armor
-    }
-
-
-    private int _manyitems = 0;
-    private int _maxitems;
-    private datatype _type;
-    private int _itemid;
-
-    public int MaxItems{
-      get{
-        return _maxitems;
-      }
-    }
-
-    public int ItemCount{
-      get{
-        return _manyitems;
-      }
-    }
-
-    public int ItemID{
-      get{
-        return _itemid;
-      }
-    }
-
-    public datatype Type{
-      get{
-        return _type;
-      }
-    }
-
-    // add or subtract the item count
-    // returns excess number
-    public int ChangeItemCount(int valueToAdd){
-      int excess = 0;
-      _manyitems += valueToAdd;
-      if(_manyitems > _maxitems){
-        excess = _manyitems - _maxitems;
-        _manyitems = _maxitems;
-      }
-      else if(_manyitems < 0){
-        excess = 0 - _manyitems;
-        _manyitems = 0;
-      }
-
-      return excess;
-    }
-  }
-
-
   // should just use the list of it
   // and returns the class based on the index
   public class Backpack{
-    public struct get_itemdatastruct{
-      public itemdata.datatype type;
-      public int itemid;
+
+    //id of [0,1,2,3,] are reserved for [weapon, ammo, consumables, armor]
+    private class bp_itemdata{
+      // items with extended data, will only have 1 max in the backpack
+
+      private int _manyitems = 0;
+      private int _maxitems;
+      private itemdata.DataType _type;
+      private int _itemid;
+
+      public object extendedData;
+
+      public int MaxItems{
+        get{
+          return _maxitems;
+        }
+      }
+
+      public int ItemCount{
+        get{
+          return _manyitems;
+        }
+      }
+
+      public int ItemID{
+        get{
+          return _itemid;
+        }
+      }
+
+      public itemdata.DataType Type{
+        get{
+          return _type;
+        }
+      }
+
+
+      public bp_itemdata(itemdata idat, int maxitem){
+        _itemid = idat.itemid;
+        _type = idat.type;
+        _maxitems = maxitem;
+      }
+
+      // add or subtract the item count
+      // returns excess number
+      public int ChangeItemCount(int valueToAdd){
+        int excess = 0;
+        _manyitems += valueToAdd;
+        if(_manyitems > _maxitems){
+          excess = _manyitems - _maxitems;
+          _manyitems = _maxitems;
+        }
+        else if(_manyitems < 0){
+          excess = 0 - _manyitems;
+          _manyitems = 0;
+        }
+
+        return excess;
+      }
     }
+
 
     //storage index contains ints based on itemdatas
     //basically index to itemdatas
+    //if the value is -1, then the storage isn't used
     private int[] indexbp;
+
     //sorted storage based on id
-    private List<itemdata> itemdatas = new List<itemdata>();
+    //the second variable is for index in backpack
+    private List<KeyValuePair<bp_itemdata, int>> itemdatas = new List<KeyValuePair<bp_itemdata, int>>();
+
     //index of unoccupied in indexbp
     //this is used when the backpack needs to know the first void storage
     //only available if a gap exists in between 0 and bp_i
     private CustomDict<int> unoccupiedIndex = new CustomDict<int>();
+
     //referencing itemdatas
     private bool isNewItemsSorted = false;
+
     private int backpacksize, bp_i = 0;
 
 
     private void _quicksort(int lowest, int highest){
       if(lowest >= 0 && highest >= 0 && lowest < highest){
         int part = _partition(lowest, highest);
-        _quicksort(lowest, part);
+        _quicksort(lowest, part-1);
         _quicksort(part+1, highest);
       }
     }
 
+    // check this
+    // idx is based on itemdatas' index
     private void swaplist(int idx1, int idx2){
-      itemdata tmp = itemdatas[idx1];
-      int bpidx = tmp.indexinbackpack, bpidx2 = itemdatas[idx2].indexinbackpack;
-      int listidx = indexbp[bpidx], listidx2 = indexbp[bpidx2];
-          
-      tmp.indexinbackpack = bpidx2;
-      indexbp[bpidx] = listidx2;
+      var pair1 = itemdatas[idx1];
+      var pair2 = itemdatas[idx2];
 
-      itemdatas[idx2].indexinbackpack = bpidx;
-      indexbp[bpidx2] = listidx;
+      int idxbp1 = pair1.Value, idxbp2 = pair2.Value;
 
-      itemdatas[idx1] = itemdatas[idx2];
-      itemdatas[idx2] = tmp;
+      // swap index based on backpack
+      indexbp[idxbp1] = idx2;
+      indexbp[idxbp2] = idx1;
+
+      // swap variables in the list
+      itemdatas[idx1] = pair2;
+      itemdatas[idx2] = pair1;
     }
 
+    // check the sort
     private int _partition(int lowest, int highest){
-      int p_id = itemdatas[highest-1].itemid, p_type = itemdatas[highest-1].itemid;
-      int pivot_i = 0;
+      int p_id = itemdatas[highest-1].Key.ItemID, p_type = (int)itemdatas[highest-1].Key.Type;
+      int pivot_i = lowest;
       for(int i = lowest; i < highest-1; i++){
-        itemdata tmp = itemdatas[i];
-        if(tmp.itemid <= p_id && (int)tmp.type <= (int)p_type){
+        bp_itemdata tmp = itemdatas[i].Key;
+        if(tmp.ItemID < p_id || tmp.ItemID == p_id && (int)tmp.Type <= p_type){
           swaplist(i, pivot_i);
           pivot_i++;
         }
       }
 
-      swaplist(highest-1, pivot_i);
+      swaplist(highest-1, pivot_i++);
       return pivot_i;
     }
 
@@ -858,191 +849,236 @@ namespace gametools{
     }
 
     //uses binary search
-    private int getIndex(int id, itemdata.datatype type){
+    //this might be in the middle, consider using getFirstIndex or getLastIndex
+    private int getIndex(int id, itemdata.DataType type){
       if(!isNewItemsSorted)
         doSortIndex();
 
       int res = -1, left = 0, right = itemdatas.Count-1;
       while(left <= right){
         int i = Mathf.FloorToInt((left+right)/2);
-        itemdata refitem = itemdatas[i];
-        if(refitem.itemid < id && (int)refitem.type < (int)type)
+        bp_itemdata refitem = itemdatas[i].Key;
+        if(refitem.ItemID < id || (int)refitem.Type < (int)type)
           left = i+1;
-        else if(refitem.itemid > id && (int)refitem.type > (int)type)
+        else if(refitem.ItemID > id || (int)refitem.Type > (int)type)
           right = i-1;
         else{
-          res = itemdatas[i].indexinbackpack;
+          res = itemdatas[i].Value;
           break;
         }
       }
 
       return res;
     }
+
+    //actually the same as getIndex, but returns the first one
+    private int getFirstIndex(int id, itemdata.DataType type){
+      int idx = getIndex(id, type);
+      if(idx < 0)
+        return idx;
+      else{
+        int i = idx;
+        bp_itemdata refitem = itemdatas[i--].Key;
+        while(refitem.ItemID == id && refitem.Type == type && i >= 0)
+          refitem = itemdatas[i--].Key;
+        
+        return i+1;
+      }
+    }
+
+    private int getLastIndex(int id, itemdata.DataType type){
+      int idx = getIndex(id, type);
+      if(idx < 0)
+        return idx;
+      else{
+        int i = idx;
+        bp_itemdata refitem = itemdatas[i++].Key;
+        while(refitem.ItemID == id && refitem.Type == type && i < itemdatas.Count)
+          refitem = itemdatas[i++].Key;
+
+        return i-1;
+      }
+    }
+
+    // return index of last in backpack, if a same item present in backpack
+    // or, return index of the backpack that is free
+    // if use_it is true, the function will account the storage usage
+    private int getFreeIndex(int itemID, itemdata.DataType type, bool use_it){
+      int maxitem = 1;
+      int idx = getLastIndex(itemID, type);
+      GD.Print("Get index: ", idx);
+      if((idx < 0 && getFreeStorageCount() > 0) || (idx >= 0 && itemdatas[idx].Key.ItemCount >= maxitem))
+        if(unoccupiedIndex.Length > 0){
+          int index = unoccupiedIndex[0];
+          if(use_it)
+            unoccupiedIndex.Remove(index);
+
+          return index;
+        }
+        else{
+          int index = bp_i;
+          if(use_it)
+            bp_i++;
+          
+          GD.Print("bp_i: ", index);
+          return index;
+        }
+
+      GD.Print("Last: ", idx);
+      return idx;
+    }
+
+    private int getFreeStorageCount(){
+      return unoccupiedIndex.Length + (backpacksize - bp_i);
+    }
+
+    private static itemdata constructItemdata(in bp_itemdata data){
+      itemdata res = new itemdata{
+        itemid = data.ItemID,
+        type = data.Type,
+        quantity = data.ItemCount,
+        extendedData = null
+      };
+
+      return res;
+    }
+
     
     public Backpack(int size){
       backpacksize = size;
       indexbp = new int[backpacksize];
     }
 
-    public int AddItem(itemdata item, int indexinbp = -1){
-      int returncode = 0;
-      if(indexinbp < 0){
-        if(unoccupiedIndex.Length > 0){
-          indexbp[unoccupiedIndex[0]] = itemdatas.Count;
-          item.indexinbackpack = unoccupiedIndex[0];
-          itemdatas.Add(item);
-          unoccupiedIndex.Remove((int)unoccupiedIndex[0]);
-        }
-        else if(bp_i < backpacksize){
-          indexbp[bp_i] = itemdatas.Count;
-          item.indexinbackpack = bp_i;
-          itemdatas.Add(item);
-          bp_i++;
-        }
-        else
-          returncode = -1;
+    // returns number of items that doesn't get cut
+    public int CutItems(int itemid, itemdata.DataType itemtype, int quantity){
+      doSortIndex();
 
-      }
-      else if(indexbp[indexinbp] < 0){
-        indexbp[indexinbp] = itemdatas.Count;
-        item.indexinbackpack = indexinbp;
-        itemdatas.Add(item);
-        unoccupiedIndex.Remove(indexinbp);
-      }
-      else
-        returncode = -1;
-
-      if(returncode >= 0)
-        isNewItemsSorted = false;
+      int lastIndex = getLastIndex(itemid, itemtype);
+      if(lastIndex < 0)
+        return quantity;
       
-      return returncode;
-    }
-
-    public void SwapItem(int index1, int index2){
-      if(index1 < backpacksize && index2 < backpacksize && index1 != index2 && index1 >= 0 && index2 >= 0){
-        int itemdatas_i1 = indexbp[index1];
-        int itemdatas_i2 = indexbp[index2];
-        if(itemdatas_i1 >= 0){
-          itemdatas[itemdatas_i1].indexinbackpack = itemdatas_i2;
-          if(itemdatas_i2 >= 0)
-            itemdatas[itemdatas_i2].indexinbackpack = itemdatas_i1;
-          else{
-            unoccupiedIndex.Remove(index1);
-            unoccupiedIndex.AddClass(index2, index2);
-          }
-
-          indexbp[index1] = itemdatas_i2;
-          indexbp[index2] = itemdatas_i1;
+      int idx = lastIndex;
+      quantity = -quantity;
+      while(quantity != 0 && idx >= 0){
+        var idataPair = itemdatas[idx];
+        quantity = idataPair.Key.ChangeItemCount(quantity);
+        if(quantity != 0){
+          itemdatas.RemoveAt(idx);
+          indexbp[idataPair.Value] = -1;
+          unoccupiedIndex.AddClass(idx, idx);
         }
+
+        idx--;
       }
+      
+      return quantity;
     }
 
-    public itemdata RemoveItem(int index){
-      int idx = indexbp[index];
-      itemdata res = null;
-      if(idx >= 0){
-        itemdatas[idx].indexinbackpack = -1;
-        res = itemdatas[idx];
-        itemdatas.RemoveAt(idx);
-        unoccupiedIndex.AddClass(idx, idx);
-        indexbp[index] = -1;
+    // if the backpack is full, it returns the excess number
+    // if the data is more than maxitem, index parameter won't be used
+    // 
+    // returns > 0 if there are excess
+    public int AddItem(itemdata data, int index = -1){
+      if(data.quantity <= 0)
+        return 0;
+
+      // maxitem should be fixed and based on the item type
+      int maxitem = 1;
+
+      // should get the same item type in the backpack, then add it from there
+      int excess = data.quantity;
+      index = index < backpacksize && index >= 0 && indexbp[index] == -1? index: getFreeIndex(data.itemid, data.type, true);
+
+      isNewItemsSorted = false;
+
+      // if index is -1, then break;
+      while(excess != 0 && itemdatas.Count < backpacksize){
+        // add if the index is already used, then add it from there
+        bp_itemdata currbp = new bp_itemdata(data, maxitem);
+        excess = currbp.ChangeItemCount(excess);
+        itemdatas.Add(new KeyValuePair<bp_itemdata, int>(currbp, index));
+
+        GD.Print("Currindex: ", index, " excess: ", excess);
+        for(int i = 0; i < itemdatas.Count; i++)
+          GD.Print("id: ", itemdatas[i].Key.ItemID, " idxbp: ", indexbp[i]);
+        GD.Print("");
+        
+        indexbp[index] = itemdatas.Count -1;
+
+        if(excess != 0)
+          index = getFreeIndex(data.itemid, data.type, true);
       }
 
-      return res;
+      return excess;
     }
 
-    public int HowManyItems(int id, itemdata.datatype type){
-      int index = getIndex(id, type);
-      int manyitems = 0;
+    public int HowManyItems(int itemid, itemdata.DataType itemtype){
+      int res = 0;
 
-      //for getting the lowest
-      for(int lowest = index; lowest > 0; lowest--){
-        itemdata tmp = itemdatas[lowest-1];
-        if(tmp.itemid == id && tmp.type != type)
-          manyitems += tmp.getmanyitems();
-        else
-          break;
+      int index = getIndex(itemid, itemtype);
+      res += itemdatas[index].Key.ItemCount;
 
-      }
-
-      //for getting the highest
-      for(int highest = index; highest < itemdatas.Count; highest++){
-        itemdata tmp = itemdatas[highest];
-        if(tmp.itemid == id && tmp.type == type)
-          manyitems += tmp.getmanyitems();
-        else
-          break;
-      }
-
-      return manyitems;
-    }
-
-    public int HowManyItemsInIdx(int index){
-      return itemdatas[indexbp[index]].getmanyitems();
-    }
-
-    //this will also remove some items
-    public int CutItems(int id, itemdata.datatype type, int many){
-      int maxidx = getIndex(id, type);
-      int manyitemscutted = 0;
-      for(; maxidx < backpacksize; maxidx++){
-        itemdata tmp = itemdatas[indexbp[maxidx]];
-        if(tmp.itemid != id || tmp.type != type){
-          maxidx++;
-          break;
-        }
-      }
-
-      for(int index = maxidx-1; index >= 0; index--){
-        itemdata tmp = itemdatas[indexbp[index]];
-        if(tmp.itemid == id && tmp.type == type){
-          int itemscount = tmp.getmanyitems();
-          if(many > itemscount){
-            many -= itemscount;
-            manyitemscutted += itemscount;
-            RemoveItem(index);
-          }
-          else{
-            manyitemscutted += many;
-            tmp.reducemanyitems(many);
+      for(int i = 1; i >= -1; i -= 2){
+        int i_index = index + i;
+        while(i_index >= 0 && i_index < itemdatas.Count){
+          if(itemdatas[i_index].Key.ItemID == itemid)
+            res += itemdatas[i_index].Key.ItemCount;
+          else
             break;
-          }
+          
+          i_index += i;
         }
-        else
-          break;
-      }
-
-      return manyitemscutted;
-    }
-
-    //return based on sorted list
-    public get_itemdatastruct[] GetBackpackItemData(){
-      get_itemdatastruct[] res = new get_itemdatastruct[itemdatas.Count];
-      for(int i = 0; i < itemdatas.Count; i++){
-        itemdata currid = itemdatas[i];
-        res[i] = new get_itemdatastruct{
-          type = currid.type,
-          itemid = currid.itemid
-        };
       }
 
       return res;
     }
 
-    public get_itemdatastruct? GetItemData(int index){
-      if(index < 0 || index >= bp_i || unoccupiedIndex.findkey(index) >= 0)
-        return null;
-
-      itemdata currentItemdata = itemdatas[indexbp[index]];
-
-      return new get_itemdatastruct{
-        type = currentItemdata.type,
-        itemid = currentItemdata.itemid
-      };
+    public void ChangeIndex(uint from, uint to){
+      try{
+        if(indexbp[from] == -1)
+          return;
+        
+        int tmp = indexbp[from];
+        if(indexbp[to] >= 0){
+          indexbp[from] = indexbp[to];
+          var _tmpbpdat = itemdatas[indexbp[to]].Key;
+          itemdatas[indexbp[to]] = new KeyValuePair<bp_itemdata, int>(_tmpbpdat, (int)from);
+        }
+        
+        indexbp[to] = tmp;
+        var tmpbpdat = itemdatas[tmp].Key;
+        itemdatas[tmp] = new KeyValuePair<bp_itemdata, int>(tmpbpdat, (int)to);
+      }
+      catch(System.Exception e){
+        GD.PrintErr("Cannot swap item between idx: (", from, ") to idx: (", to, ").\nError msg: ", e.ToString(), "\n");
+      }
     }
 
-    public itemdata this[](int index){
-      return itemdatas[indexbp[index]];
+    public itemdata?[] GetItemData(){
+      itemdata?[] idata = new itemdata?[backpacksize];
+      for(int i = 0; i < backpacksize && i < bp_i; i++)
+        if(indexbp[i] > -1)
+          idata[i] = constructItemdata(itemdatas[indexbp[i]].Key);
+        else
+          idata[i] = null;
+      
+      return idata;
+    }
+
+    public itemdata? GetItemData(int idx){
+      if(idx >= 0 && idx < backpacksize && indexbp[idx] != -1)
+        return constructItemdata(itemdatas[indexbp[idx]].Key);
+      
+      return null;
+    }
+
+    public bool IsStorageAvailable(int idx){
+      if(idx >= 0 && idx < backpacksize)
+        return indexbp[idx] != -1;
+      else
+        GD.PrintErr("Cannot get item in idx: (", idx, ")\n");
+
+      return false;
     }
   }
 }

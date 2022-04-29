@@ -28,17 +28,16 @@ public class Player: NPC{
 
 
   private void _OpenBackpack(){
-    backpackGui.UpdateBackpackInformation(playerBackpack.GetBackpackItemData());
     backpackGui.Popup_();
   }
 
   private void ReloadWeapon(){
-    int ammocount = playerBackpack.CutItems(currentWeapon.AmmoID, itemdata.datatype.ammo, currentWeapon.MaxAmmo);
+    int ammocount = playerBackpack.CutItems(currentWeapon.AmmoID, itemdata.DataType.ammo, currentWeapon.MaxAmmo);
 
     if(ammocount <= 0)
       GD.PrintErr("Ammo insufficient.");
     else
-      GD.Print("Current ammo in backpack: ", playerBackpack.HowManyItems(currentWeapon.AmmoID, itemdata.datatype.ammo));
+      GD.Print("Current ammo in backpack: ", playerBackpack.HowManyItems(currentWeapon.AmmoID, itemdata.DataType.ammo));
     
     currentWeapon.Reload(ammocount);
   }
@@ -56,20 +55,30 @@ public class Player: NPC{
     AddChild(currentWeapon);
 
     playerBackpack.AddItem(new itemdata{
-      type = itemdata.datatype.weapon,
-      itemid = 0
+      itemid = 1,
+      type = itemdata.DataType.consumables,
+      quantity = 2
     });
 
     playerBackpack.AddItem(new itemdata{
-      type = itemdata.datatype.weapon,
-      itemid = 1
-    });
-
-    playerBackpack.AddItem(new itemdata{
-      type = itemdata.datatype.ammo,
       itemid = 0,
-      
-    })
+      type = itemdata.DataType.consumables,
+      quantity = 1
+    });
+
+    playerBackpack.AddItem(new itemdata{
+      itemid = 2,
+      type = itemdata.DataType.consumables,
+      quantity = 3
+    });
+
+    playerBackpack.AddItem(new itemdata{
+      itemid = 1,
+      type = itemdata.DataType.consumables,
+      quantity = 10
+    });
+
+    printbpToConsole();
   }
 
   public override void _Process(float delta){
@@ -187,6 +196,17 @@ public class Player: NPC{
     object currentuseable = useableAutoload.GetUseable(mousedir*playerUseRange+GlobalPosition, 10);
     if(currentuseable is Useable)
       ((Useable)currentuseable).OnUsed();
+  }
+
+  public void printbpToConsole(){
+    itemdata?[] itemdats = playerBackpack.GetItemData();
+    for(int i = 0; i < itemdats.Length; i++){
+      if(!itemdats[i].HasValue)
+        continue;
+      
+      itemdata curritem = itemdats[i].Value;
+      GD.Print(string.Format("name: \"{0}\"\nid: {1}\nitem count: {2}\n\n", ItemAutoload.Autoload.GetItemName(curritem.itemid), curritem.itemid, curritem.quantity));
+    }
   }
 }
 

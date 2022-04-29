@@ -15,6 +15,8 @@ void toBinary(string s, size_t typeSize){
   }
 }
 
+const char t = 'a';
+
 void operationalReturn(objData &obj){
   switch(obj.functionCode){
     case FUNCS_PROGRAM_EXIT:
