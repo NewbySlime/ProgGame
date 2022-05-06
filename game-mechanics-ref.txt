@@ -1,0 +1,39 @@
+- - -   Power hunger system   - - -
+
+The hunger system is literally a hunger system but with some turns on how it works.
+Player can still eat some food as energy, even as a robot, the robot has digestive system just for converting it to energy
+Player can use recharging stations as the source of energy.
+Some weapons can use player's energy to fire or getting damage boost. But draining them will cause player to shutdown.
+If energy is completely depleted, the emergency battery will be used to prevent corrupted data due to sudden shutdown and calling for backup. In this state, the Player remain unconscious until he get rescued.
+
+
+- - -   Death and revive system   - - -
+
+If player is dead, player can wait until he get rescued. (unless death to lava or some sort)
+Or player can rebuild itself with hefty cost, or scarce materials.
+
+
+- - -   Programming   - - -
+
+Player will have to use computer in order to ready up the Helper bot. Even if the Robot have its own editor to program. And Helper bot need to be in a dock to set the program. In terms of programming language, it will use cpp and visual programming in order to keep Helper bot's functionality.
+
+Every time the game starts up, the Helper bot's program is resetted. In order to avoid confusion, the program doesn't use main function, instead it will use Helper bot's functions.
+
+
+- - -   Health    - - -
+
+Player can only heal by fixing station or using "fixing kit", or they can use a gear built using self healing material to avoid using healing items. Fixing stations uses material and electric in order to fix something. Critical damage cannot be healed, the damage can be healed using fixing station. There's a certain threshold where the object can still receive critical damage without reducing temporary max health.
+
+
+- - -   Damage    - - -
+Damage consists of elements such as normal, shock, acid, burn, and toxic.
+
+Normal damage is self explanatory, just a normal damage, nothing special.
+
+Shock (or electrocute) damage uses electric, it's effective towards electrical based "beings" (like Robots). The effective of the damage can be reduced by using a gear that prevents it or made by non-conductive materials.
+
+Acid damage uses chemicals to use it, it's effective towards armor or "beings" that uses metal to cover its vitals (Robots and Helper bots can use another non-metal materials as its cover). As noted, the effectiveness of the damage can be reduced, or completely nullified by using a gear that prevents it or made by materials that prevent it.
+
+Burn damage uses chemicals or burnable materials. Burn damages deal more damage to biological beings, not for  Robots and the like (but still deal burn damage and possibly reduce max damage). Burn damages can be reduced or completely nullified by using a gear that prevents it or made by hardly-burn materials.
+
+Toxic damage uses chemicals too. It's effective towards biological beings (like animals or monsters) and normal damage towards electrical based "beings". The effectiveness cannot be reduced, but can be healed by certain medicines or by time (actually damaged when moving).

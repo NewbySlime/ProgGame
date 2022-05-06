@@ -34,3 +34,26 @@ public class Useable: Node2D{
     GD.PrintErr("OnUsed() function isn't implemented");
   }
 }
+
+
+// in-game shop
+public class GameShop: Useable{
+  public override void _Ready(){
+    base._Ready();
+  }
+  
+  public override void OnUsed(){
+    
+  }
+}
+
+public class RechargeStation: Useable{
+  public override void _Ready(){
+    base._Ready();
+  }
+  
+  public override void OnUsed(){
+    // change player position to position of charging station
+    // then warn player's class to change state to idle/recharging
+  }
+}

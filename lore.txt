@@ -1,0 +1,7 @@
+- -   Main lore   - -
+
+Game is set in 2174, humanity is desperate for energy and materials as they are becoming scarce each year. Thus, since humanity is also .... You, as the robot, tasked to fly to the outer space, fleeting to nearest habitable planet. Since humans .... By using tools and some helper bot from earth to convert the planet to be more habitable and safe.
+
+Helper bot is completely different than (player) Robot. The key difference is the brain of Helper bot and Robot. Robot has the superiority against Helper bot in terms of having thoughts and ability to adapt, while Helper bot can't and need to be programmed as pleased to adapt and meet conditions. Whilst there's a possiblity for creating same brain for Helper bot, unfortunately, this kind of functionality is costly and will be avoided in order to mass-produced in large scale with low cost.
+
+Programming the Helper bot is key to achieve automation and boost the process of the main goal. Since the humans on earth only can help by giving default and some basic programs, and can't predict possible problems in the new planet, the player, or Robot, have ... for this project to happen. The reason why humans can't help the Robot is mainly due to limited communication caused by long distance, therefore having fast feedback is not possible.

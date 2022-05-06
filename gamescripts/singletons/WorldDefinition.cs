@@ -22,21 +22,20 @@ public class WorldDefinition: Node2D{
     JSONParseResult parsedobj = JSON.Parse(jsonstore);
     if(parsedobj.Result is Dictionary){
       var maindict = parsedobj.Result as Dictionary;
+      
+      // change this, it is wrong
       foreach(string _itemname in maindict.Keys){
         try{
           switch(_itemname){
-            case "ammo":
+            case "item_max":{
+              var subdict = maindict[_itemname];
+              data_ItemMax_ammo = (int)(float)subdict["ammo"];
+              data_ItemMax_weapon = (int)(float)subdict["weapon"];
+              data_ItemMax_consumables = (int)(float)subdict["consumables"];
+              data_ItemMax_armor = (int)(float)subdict["armor"];
+              
               break;
-            
-            case "weapon":
-              break;
-            
-            case "consumables":
-              break;
-            
-            case "armor":
-              break;
-          }
+            }
         }
         catch(System.Exception e){
           GD.PrintErr("Error when trying to process data.\nItem name: ", _itemname, "\nError msg: ", e.ToString(), "\n");
@@ -46,7 +45,21 @@ public class WorldDefinition: Node2D{
   }
 
   public int GetItemMax(itemdata.DataType type){
-
+    switch(type){
+      case itemdata.DataType.ammo:
+        return data_ItemMax_ammo;
+      
+      case itemdata.DataType.weapon:
+        return data_ItemMax_weapon;
+        
+      case itemdata.DataType.consumables:
+        return data_ItemMax_consumables;
+      
+      case itemdata.DataType.armor:
+        return data_ItemMax_armor;
+    }
+    
+    return 1;
   }
 
   public static WorldDefinition Autoload{

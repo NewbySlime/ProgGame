@@ -1,8 +1,21 @@
 using Godot;
+using Godot.Generic;
 using System;
 
 /* This code haven't tested yet */
 
+public static class SavefileHandler{
+  // for saving datas
+  // will add dictionary data to supply data
+  public static void Save(ref Dictionary jsondict, ){
+    
+  }
+  
+  
+  // for loading datas
+  // will use dictionary data to get what needed
+  public static void Load(ref Dictionary jsondict, )
+}
 
 public class SavefileLoader: Node2D{
   private const string savefolder = "players";
@@ -16,12 +29,12 @@ public class SavefileLoader: Node2D{
 
   }
 
-  public static string todir(string[] files, string conjuntion = "/"){
+  public static string todir(string[] files, string separator = "/"){
     string res = "";
     if(files.Length > 0){
       res = files[0];
       for(int i = 1; i < files.Length; i++)
-        res += conjuntion + files[i];
+        res += separator + files[i];
     }
 
     return res;
@@ -65,5 +78,9 @@ public class SavefileLoader: Node2D{
   
   public bool isUserExists(string username){
     return directory.DirExists(currentsaveDir + username);
+  }
+  
+  public void bindUserSaveData(string username){
+    
   }
 }

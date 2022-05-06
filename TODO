@@ -141,8 +141,10 @@
 [v] add damage types and use it for DamageableObj
 [v] change the player class to npc since the robots and enemies use the same function as the player
 [v] give the gun some smoke trails
-[ ] use backpack for the player
+[v] use backpack for the player
+[ ] add coin backpack within the backpack
 [ ] then make a temporary ui for the backpack
+[ ] player have power system (alternative of hunger system)
 [ ] add some firing effects
 [ ] finish weapon shoot type
 [ ] focus on the gui

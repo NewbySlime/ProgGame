@@ -904,7 +904,7 @@ namespace gametools{
     // or, return index of the backpack that is free
     // if use_it is true, the function will account the storage usage
     private int getFreeIndex(int itemID, itemdata.DataType type, bool use_it){
-      int maxitem = 1;
+      int maxitem = WorldDefinition.autoload.GetItemMax(type);
       int idx = getLastIndex(itemID, type);
       GD.Print("Get index: ", idx);
       if((idx < 0 && getFreeStorageCount() > 0) || (idx >= 0 && itemdatas[idx].Key.ItemCount >= maxitem))
@@ -983,7 +983,7 @@ namespace gametools{
         return 0;
 
       // maxitem should be fixed and based on the item type
-      int maxitem = 1;
+      int maxitem = WorldDefinition.autoload.GetItemMax(data.type);
 
       // should get the same item type in the backpack, then add it from there
       int excess = data.quantity;

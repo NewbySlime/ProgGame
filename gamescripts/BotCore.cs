@@ -85,8 +85,18 @@ public class BotCore: ProgrammableObject{
       progrun.writeInputOnce();
   }
 
+  // not tested
+  // not added in cpp lib
   public async void movefrontback(float distance, ushort functionID){
-
+    
+  }
+  
+  public async void controlmotor(float power, ushort functionID){
+    
+  }
+  
+  public async void controlsteer(float angle_steer, ushort functionID){
+    
   }
 
   public async void turn(float deg, ushort functionID){

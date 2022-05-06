@@ -4,6 +4,7 @@ using Godot;
 using godcol = Godot.Collections;
 
 public struct itemdata{
+  // this is for changeable properties (durability, current damage, and stuffs)
   public struct extended_WeaponData{
 
   }

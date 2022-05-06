@@ -45,9 +45,22 @@ public static class dmgModDefaultData{
 }
 
 public class DamageableObj: RigidBody2D{
-  public struct dmgMod{
-    public float NormalModifier, ToxicModifier, BurnModifier, ElectrocuteModifier;
-    public float StunChance;
+  public struct dmgObjProperties{
+    public struct dmgMod{
+      public float NormalModifier, ToxicModifier, BurnModifier, ElectrocuteModifier;
+      public float StunChance;
+    }
+    
+    public enum ObjType{
+      biological,
+      metal,
+      
+      // other obj type will make all damage type become normal, except burn
+      other
+    }
+    
+    public dmgMod modifier;
+    public ObjType Otype;
   }
 
   [Signal]
@@ -71,13 +84,19 @@ public class DamageableObj: RigidBody2D{
   private bool isStunned = false;
   private Timer StunnedTimer = new Timer();
 
-  [Export]
   protected int maxhealth = 10;
+  
+  [Export]
+  protected int actualmaxhealth = 10;
 
   protected dmgMod DamageModifier = dmgModDefaultData.dmgMod_One;
 
   protected int maxHealth{
     get{return maxhealth;}
+  }
+  
+  protected int actualMaxHealth{
+    get{return actualmaxhealth;}
   }
 
   protected float CurrentHealth{
